@@ -12,7 +12,6 @@ ROOT_DIR = os.path.dirname(PROJECT_DIR)
 APPS_DIR = os.path.realpath(os.path.join(ROOT_DIR, 'oc-projet-9'))
 sys.path.append(APPS_DIR)
 
-SECRET_KEY = 'django-insecure-i%h@_bao8z(33%022m%att)2)*j3&cv+nyvdc2pzaegi9d+wl#'
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -105,6 +104,8 @@ TIME_ZONE = 'UTC'
 USE_I18N = True
 USE_TZ = True
 
+
+SECRET_KEY = 'django-insecure-k1-3qmw*duh-f_uhso9gugv$f6af0n4vq_c1mbc00(3g6i30(l'
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.1/howto/static-files/
