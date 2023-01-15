@@ -84,3 +84,12 @@ class ReviewTest(TestCase):
         print("userFollow success")
         assert UserFollows.objects.count() == 1
         self.assertTrue(True)
+
+    def test_userFollow_fail(self):
+        try:
+            UserFollows(
+                user_id = "a",
+                followed_user_id = "azdadzazd"
+            ).save()
+        except Exception as e:
+            print(f"userFollow fail, {e}")
