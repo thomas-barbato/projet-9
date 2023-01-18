@@ -1,0 +1,32 @@
+[
+  {
+    "model": "auth.user",
+    "pk": null,
+    "fields": {
+        "password":"passwordtest123*",
+        "last_login": null,
+        "is_superuser": false,
+        "username":"test",
+        "last_name": "jacky",
+        "email":"email@email.com",
+        "is_staff": false,
+        "is_active": true,
+        "date_joined": "2023-01-15 10:38:15"
+    }
+  },
+  {
+    "model": "auth.user",
+    "pk": null,
+    "fields": {
+        "password":"pass*",
+        "last_login": null,
+        "is_superuser": false,
+        "username":"test2",
+        "last_name": "paul",
+        "email":"email",
+        "is_staff": false,
+        "is_active": true,
+        "date_joined": "2023-01-15 10:38:15"
+    }
+  }
+]

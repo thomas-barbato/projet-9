@@ -1,0 +1,13 @@
+[
+  {
+    "model": "core.ticket",
+    "pk": null,
+    "fields": {
+        "title":"un titre",
+        "description":"une description",
+        "time_created":"2023-01-15 10:38:15",
+        "user_id" : 1,
+        "image": null
+      }
+  }
+]

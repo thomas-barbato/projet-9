@@ -1,0 +1,15 @@
+[
+  {
+    "model": "core.review",
+    "pk": null,
+      "fields": {
+      "ticket" : 1,
+      "rating" : 4,
+      "user" : 1,
+      "headline" : "un titre",
+      "body" : "un corp de text",
+      "time_created" : "2023-01-15 10:38:15"
+    }
+
+  }
+]

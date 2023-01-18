@@ -1,0 +1,18 @@
+[
+  {
+    "model": "core.userfollows",
+    "pk": null,
+    "fields": {
+      "followed_user_id":1,
+      "user_id":2
+    }
+  },
+  {
+    "model": "core.userfollows",
+    "pk": null,
+    "fields": {
+      "followed_user_id":2,
+      "user_id":1
+    }
+  }
+]

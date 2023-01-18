@@ -116,6 +116,16 @@ STATICFILES_DIRS = [
     os.path.join(BASE_DIR, "core" + STATIC_URL),
 ]
 
+"""
+    JSON FIXTURES
+"""
+FIXTURE_DIRS = [
+    BASE_DIR+'/core/fixtures/user.json',
+    BASE_DIR+'/core/fixtures/review.json',
+    BASE_DIR+'/core/fixtures/userfollows.json',
+    BASE_DIR+'/core/fixtures/ticket.json'
+]
+
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.1/ref/settings/#default-auto-field
 
