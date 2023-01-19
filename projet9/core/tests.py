@@ -41,7 +41,7 @@ class ReviewTest(TestCase):
 
     def test_user_username_len(self):
         try:
-            # self.user.username = "a"*150
+            self.user.username = "a"*150
             self.assertLessEqual(len(self.user.username), 128, "username len is too large")
         except AssertionError as assert_e:
             print(assert_e)
@@ -76,14 +76,28 @@ class ReviewTest(TestCase):
         print("userFollow success")
         self.assertTrue(True)
 
-    @staticmethod
-    def test_userFollow_fail():
-        try:
-            UserFollows(
+    # test with assertRaise
+    def raise_Error(self, instance):
+        return ord(instance.user_id), ord(instance.followed_user_id)
+
+    def test_userFollow_fail(self):
+        with self.assertRaises(ValueError):
+            u = UserFollows(
                 user_id = "a",
                 followed_user_id = "azdadzazd"
             ).save()
-        except ValueError as e:
-            print(f"userFollow fail, {e}")
+            uid, fuid = self.raise_Error(u)
+            u.user_id = uid
+            u.followed_user_id = fuid
+            u.save()
+
+    def test_exception(self):
+        with self.assertRaises(IndexError):
+            l = ["1"]
+            print(l[1])
+
+
+
+
 
 
