@@ -50,7 +50,8 @@ ROOT_URLCONF = 'projet9.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [os.path.join(BASE_DIR, 'core', 'templates/core/')],
+        'DIRS': [os.path.join(BASE_DIR, 'core', 'templates/core/'),
+                 os.path.join(os.path.join(BASE_DIR,'frontend', 'templates/frontend/'), 'authentication')],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -62,6 +63,11 @@ TEMPLATES = [
         },
     },
 ]
+
+
+LOGIN_URL = 'core.login_view'
+LOGIN_REDIRECT_URL = 'core.login_view'
+LOGOUT_REDIRECT_URL = 'core.login_view'
 
 WSGI_APPLICATION = 'projet9.wsgi.application'
 
@@ -112,6 +118,7 @@ SECRET_KEY = 'django-insecure-k1-3qmw*duh-f_uhso9gugv$f6af0n4vq_c1mbc00(3g6i30(l
 
 
 STATIC_URL = '/static/'
+STATIC_ROOT = PROJECT_DIR + '/static/'
 STATICFILES_DIRS = [
     os.path.join(BASE_DIR, "core" + STATIC_URL),
 ]
