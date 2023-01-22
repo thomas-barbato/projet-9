@@ -10,12 +10,7 @@ import datetime
 
 # Create your tests here.
 class ReviewTest(TestCase):
-    fixtures = [
-        "user.json",
-        "review.json",
-        "userfollows.json",
-        "ticket.json"
-    ]
+    fixtures = ["user.json", "review.json", "userfollows.json", "ticket.json"]
     # this fun start everytime
     # i made a test.
     # can be used to
@@ -27,7 +22,10 @@ class ReviewTest(TestCase):
         self.user2 = User.objects.get(username="test2")
         self.ticket = Ticket.objects.get(title="un titre", user_id=self.user.id)
         self.review = Review.objects.get(ticket_id=self.ticket.id, user_id=self.user.id)
-        self.userfollows = UserFollows.objects.get(followed_user_id=self.user2.id, user_id=self.user.id)
+        self.userfollows = UserFollows.objects.get(
+            followed_user_id=self.user2.id, user_id=self.user.id
+        )
+
     # fun executed at the end of
     # a test
 
@@ -41,15 +39,19 @@ class ReviewTest(TestCase):
 
     def test_user_username_len(self):
         try:
-            self.user.username = "a"*150
-            self.assertLessEqual(len(self.user.username), 128, "username len is too large")
+            self.user.username = "a" * 150
+            self.assertLessEqual(
+                len(self.user.username), 128, "username len is too large"
+            )
         except AssertionError as assert_e:
             print(assert_e)
 
     def test_user_password_len(self):
         try:
             # self.user.password = "123"
-            self.assertGreaterEqual(len(self.user.password), 8, "Your password len is too short.")
+            self.assertGreaterEqual(
+                len(self.user.password), 8, "Your password len is too short."
+            )
         except AssertionError as assert_e:
             print(assert_e)
 
@@ -70,7 +72,6 @@ class ReviewTest(TestCase):
         print("review success")
         self.assertTrue(True)
 
-
     def test_userFollow_success(self):
         assert UserFollows.objects.count() >= 1
         print("userFollow success")
@@ -82,10 +83,7 @@ class ReviewTest(TestCase):
 
     def test_userFollow_fail(self):
         with self.assertRaises(ValueError):
-            u = UserFollows(
-                user_id = "a",
-                followed_user_id = "azdadzazd"
-            ).save()
+            u = UserFollows(user_id="a", followed_user_id="azdadzazd").save()
             uid, fuid = self.raise_Error(u)
             u.user_id = uid
             u.followed_user_id = fuid
@@ -95,9 +93,3 @@ class ReviewTest(TestCase):
         with self.assertRaises(IndexError):
             l = ["1"]
             print(l[1])
-
-
-
-
-
-

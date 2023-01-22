@@ -1,13 +1,52 @@
 {% extends "generalist_template.html" %}
+{% load static %}
 {% block content %}
-<div class="container-fluid">
-    <div class="col-12 mx-auto">
-        <p class="text-center">test</p>
+<div class="container-fluid main-container">
+    <div class="row no-gutters d-flex justify-content-center">
+        <h2 class="text-center"><b>LITR</b>eview</h2>
+    </div>
+    <hr>
+    <div class="row no-gutters d-flex justify-content-center">
+        <div class="col-4 col-md-4 col-sm-12">
+            <div class="col-12 text-center">
+                <p><b>Inscrivez-vous maintenant</b></p>
+            </div>
+            <div class="col-12 text-center">
+                <form method="GET" action="{% url 'create_user_view' %}">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-success">S'inscrire</button>
+                </form>
+            </div>
+        </div>
+        <div class="col-xl-6 col-md-6 col-sm-12">
+            <div class="col-12 text-center">
+                <p><b>Connectez-vous</b></p>
+            </div>
+            <form method="POST" action="{% url 'login_view' %}">
+                {% csrf_token %}
+                {{ signin_form.username }}
+                {% if error_display == 'true' %}
+                <div class="alert alert-danger login-policy" role="alert">
+                  This is a secondary alert—check it out!
+                </div>
+                {% endif %}
+                {{ signin_form.password }}
+                {% if error_display == 'true' %}
+                <div class="alert alert-danger login-policy" role="alert">
+                  This is a secondary alert—check it out!
+                </div>
+                {% endif %}
+            <div class="col-12 text-center mt-2 d-flex justify-content-end">
+                <button type="submit" class="btn btn-success text-align-right" value="connect">Se connecter</button>
+            </div>
+            </form>
+        </div>
     </div>
 </div>
 {% endblock %}
 {% block javascript %}
 <script>
+
 
 </script>
 {% endblock %}
