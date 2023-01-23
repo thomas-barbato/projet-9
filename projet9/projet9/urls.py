@@ -9,6 +9,8 @@ from django.contrib.auth.views import LoginView
 import core
 from core import views as core_views
 
+app_name = 'core'
+
 urlpatterns = [
     path("admin", admin.site.urls, name="admin"),
     path(

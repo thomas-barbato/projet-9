@@ -13,12 +13,19 @@
             </div>
             <div class="col-12 text-center">
                 <form method="GET" action="{% url 'create_user_view' %}">
-                    {% csrf_token %}
                     <button type="submit" class="btn btn-success">S'inscrire</button>
                 </form>
             </div>
         </div>
         <div class="col-xl-6 col-md-6 col-sm-12">
+            {% if request.user.is_authenticated %}
+            <div class="col-12 text-center">
+                <p><b>Vous êtes déjà connecté</b></p>
+            </div>
+            <form method="GET" action="{% url 'dashboard_view' %}" class="col-12 text-center mt-2 d-flex justify-content-center">
+                <button type="submit" class="btn btn-success text-align-right" value="connect">Acceder à mon dashboard</button>
+            </form>
+            {% else %}
             <div class="col-12 text-center">
                 <p><b>Connectez-vous</b></p>
             </div>
@@ -40,6 +47,7 @@
                 <button type="submit" class="btn btn-success text-align-right" value="connect">Se connecter</button>
             </div>
             </form>
+            {% endif %}
         </div>
     </div>
 </div>

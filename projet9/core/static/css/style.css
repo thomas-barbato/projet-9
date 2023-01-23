@@ -7,6 +7,11 @@
     text-align:center;
 }
 
-button {
+li {
+    list-style:none;
+}
 
+.alert{
+
+    text-justify: auto;
 }

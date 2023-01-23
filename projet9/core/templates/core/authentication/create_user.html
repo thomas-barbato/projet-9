@@ -1,9 +1,47 @@
 {% extends "generalist_template.html" %}
 {% load static %}
 {% block content %}
+<div class="container-fluid main-container">
+    <div class="row no-gutters col-12 d-flex justify-content-center">
+        <div class="row no-gutters col-12">
+            <h2 class="text-center"><b>LITR</b>eview</h2>
+        </div>
+    </div>
+    <hr>
+    <div class="row no-gutters d-flex justify-content-center">
+        <h4 class="text-center"><i>Inscrivez-vous</i></h4>
+        <div class="col-xl-4 col-md-4 col-sm-12">
+            <form method="POST" action="{% url 'create_user_view' %}">
+                {% csrf_token %}
+                {{ signup_form.username }}
+                {% if error_user_already_exists %}
+                    {{ signup_form.username.help_text|safe }}
+                {% endif %}
+                {{ signup_form.password }}
+                {{ signup_form.password2 }}
+                {% if signup_form.password.errors %}
+                    {{ signup_form.password.errors|escape }}
+                {% endif %}
 
-    {{ signup_form }}
-
+                <div class="col-12 text-center mt-2 d-flex justify-content-end">
+                    <form method="GET" action="{% url 'login_view' %}" class=" text-align-center col-6">
+                        <button type="button" class="btn btn-success return-button col-4 " value="back_to_login_view">Retourner</button>
+                    </form>
+                    <div class=" text-align-center col-6">
+                        <button type="submit" class="btn btn-success text-align-center col-4 " value="signup">S'inscrire</button>
+                    <div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
 {% endblock %}
 {% block javascript %}
+<script>
+    $('.return-button').on('click', function(){
+        let url = "{% url 'login_view' %}";
+        window.location.href = url;
+    });
+</script>
+
 {% endblock %}
