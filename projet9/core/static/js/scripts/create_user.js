@@ -1,41 +1,12 @@
-{% extends "generalist_template.html" %}
-{% load static %}
-{% block content %}
-<div class="container-fluid main-container">
-    <div class="row no-gutters d-flex justify-content-center">
-        <h4 class="text-center"><i>Inscrivez-vous</i></h4>
-        <div class="col-xl-4 col-md-4 col-sm-12">
-            <form method="POST" action="">
-                {% csrf_token %}
-                {{ signup_form.username }}
-                <div id="username_error"></div>
-                {{ signup_form.password }}
-                {{ signup_form.password2 }}
-                <div id="password_error"></div>
-                <div class="col-12 text-center mt-2 d-flex justify-content-end">
-                    <form method="GET" action="{% url 'login_view' %}" class=" text-align-center col-6">
-                        <button type="button" class="btn btn-success return-button col-4 " value="back_to_login_view">Retourner</button>
-                    </form>
-                    <div class=" text-align-center col-6">
-                        <button type="button" class="btn btn-success text-align-center col-4 signup-button" value="signup">S'inscrire</button>
-                    <div>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
-{% endblock %}
-{% block javascript %}
-<script>
+function create_user(url, url_redirect){
     $('#username_error, #password_error').hide()
-
     $('.return-button').on('click', function(){
         let url = "{% url 'login_view' %}";
         window.location.href = url;
     });
 
     $('.signup-button').on('click', function(){
-        let url = "{% url 'registration_view' %}";
+        console.log(url)
         let username = $('#id_username').val();
         let password = $('#id_password').val();
         let password2 = $('#id_password2').val();
@@ -52,8 +23,6 @@
             },
             success(json){
                 if(json.status == 1){
-
-                    let url_redirect = "{% url 'registration_success_view' %}";
                     window.location = url_redirect
                 }else{
                     let password_elem = $('#password_error')
@@ -73,8 +42,4 @@
 
         })
     })
-
-
-</script>
-
-{% endblock %}
+}

@@ -15,3 +15,8 @@ li {
 
     text-justify: auto;
 }
+
+.nav-link:hover{
+    transform: scale(1.1)
+    color:whitesmoke;
+}

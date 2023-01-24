@@ -1,8 +1,7 @@
 from django import forms
 from django.contrib.auth.forms import AuthenticationForm, UserCreationForm
 from django.forms.widgets import PasswordInput, TextInput
-from .validators.check_data import CheckPasswordStrength, CheckUsernameAlreadyUsed
-from django.utils.safestring import mark_safe
+from .validators.check_data import CheckPasswordPolicy, CheckUsernameAlreadyUsed
 
 
 class SigninForm(AuthenticationForm):
@@ -39,7 +38,7 @@ class SignupForm(forms.Form):
         required=True,
         label="",
         validators=[CheckUsernameAlreadyUsed().validate],
-        help_text=CheckUsernameAlreadyUsed().get_help_text()
+        help_text=CheckUsernameAlreadyUsed().get_help_text(),
     )
     password = forms.CharField(
         widget=PasswordInput(
@@ -50,17 +49,17 @@ class SignupForm(forms.Form):
         ),
         required=True,
         label="",
-        validators=[CheckPasswordStrength().validate],
+        validators=[CheckPasswordPolicy().validate],
     )
     password2 = forms.CharField(
         widget=PasswordInput(
             attrs={
-                "class": "form-control text-center",
+                "class": "form-control mt-1 text-center",
                 "placeholder": "Confirmez le mot de passe",
             },
         ),
         required=True,
         label="",
-        validators=[CheckPasswordStrength().validate],
-        help_text=CheckPasswordStrength().get_help_text()
+        validators=[CheckPasswordPolicy().validate],
+        help_text=CheckPasswordPolicy().get_help_text(),
     )

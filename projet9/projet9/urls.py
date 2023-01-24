@@ -19,13 +19,23 @@ urlpatterns = [
         name="login_view",
     ),
     path(
-        "new-user",
+        "registration",
         core_views.CreateUserView.as_view(template_name="authentication/create_user.html"),
-        name="create_user_view",
+        name="registration_view",
+    ),
+    path(
+        "registration-success",
+        core_views.SignupSuccessView.as_view(template_name="authentication/login.html"),
+        name="registration_success_view",
     ),
     path(
         "dashboard",
         core_views.DashboardView.as_view(template_name="dashboard/dashboard.html"),
         name="dashboard_view",
+    ),
+    path(
+        "logout",
+        core_views.UserLogout.as_view(),
+        name="user_logout",
     ),
 ] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)

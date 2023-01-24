@@ -3,15 +3,20 @@ from django.http import HttpResponse
 from django.contrib.auth import authenticate, login, logout
 from django.views import View
 from django.contrib.auth.decorators import login_required
+from django.contrib.sessions.models import Session
+from django.views.generic import RedirectView
+
 from .forms import *
 from .models import *
 from django.views.decorators.csrf import csrf_protect, csrf_exempt
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.conf import settings
 from django.utils.decorators import method_decorator
-from django.http import HttpResponseRedirect
+from django.http import HttpResponseRedirect, JsonResponse
 from django.urls import reverse
+from django import forms
 import datetime
+import json
 
 
 class CreateUserView(View):
@@ -24,30 +29,59 @@ class CreateUserView(View):
     @method_decorator(csrf_protect)
     def post(self, request, *args, **kwargs):
         data = SignupForm(request.POST)
-        print(data)
+        response = ""
         if data.is_valid():
-            if data.cleaned_data['password'] == data.cleaned_data['password2']:
+            if data.cleaned_data["password"] == data.cleaned_data["password2"]:
                 User.objects.create_user(
-                    username=data.cleaned_data['username'],
-                    password=data.cleaned_data['password'],
+                    username=data.cleaned_data["username"],
+                    password=data.cleaned_data["password"],
                     is_active=True,
                     is_staff=False,
-                    date_joined=datetime.datetime.now()
+                    date_joined=datetime.datetime.now(),
                 ).save()
+                response = {'status': 1, 'url_redirect': "registration_success_view"}
+                return JsonResponse(
+                    response
+                )
             else:
-                password_error = data.errors.as_data()['password']
-                return render(request, self.template_name, {"signup_form": data})
+                data.add_error(
+                    None,
+                    '<div class="alert alert-danger text-center col-xl-12 col-md-12 col-sm-10 mt-1" role="alert">'
+                    '<p>Veuillez entrer deux fois le même mot de passe.</p>'
+                    '</div>',
+                )
+                response = {'status': 0, 'errors': dict(data.errors.items())}
+                return JsonResponse(
+                    response
+                )
         else:
-            global_errors = data.errors.as_data()
-            return redirect(reverse('create_user_view'))
+            response = {'status': 0, 'errors': dict(data.errors.items())}
+            return JsonResponse(
+                response
+            )
 
+
+class SignupSuccessView(View):
+    login_url = settings.LOGIN_URL
+    template_name = "dashboard/dashboard.html"
+
+    def get(self, request, *args, **kwargs):
+        return render(
+            request,
+            self.template_name,
+            {"signin_form": SigninForm, "user_creation_success": "true"},
+        )
 
 class LoginView(View):
     template_name: str = "authentication/login.html"
 
     def get(self, request, *args, **kwargs):
-        return render(request, self.template_name, {"signin_form": SigninForm, "error_display": "false"})
-    
+        return render(
+            request,
+            self.template_name,
+            {"signin_form": SigninForm, "error_display": "false"},
+        )
+
     @method_decorator(csrf_protect)
     def post(self, request, *args, **kwargs):
         if request.method == "POST":
@@ -58,16 +92,22 @@ class LoginView(View):
             )
             if user is not None:
                 login(request, user)
-                return redirect(reverse('dashboard_view'))
-            else:
-                return render(
-                    request,
-                    self.template_name,
-                    {
-                        "signin_form": SigninForm,
-                        "error_display": "true",
-                    },
+                response = {'status': 1}
+                return JsonResponse(
+                    response
                 )
+            else:
+                response = {'errors': "true"}
+                return JsonResponse(
+                    response
+                )
+        else:
+            response = {'errors': "true"}
+            return JsonResponse(
+                response
+            )
+
+
 
 class DashboardView(LoginRequiredMixin, View):
     login_url = settings.LOGIN_URL
@@ -75,3 +115,16 @@ class DashboardView(LoginRequiredMixin, View):
 
     def get(self, request, *args, **kwargs):
         return render(request, self.template_name)
+
+
+class UserLogout(RedirectView):
+    login_url = settings.LOGIN_URL
+    template_name: str = "authentication/login.html"
+
+    def get(self, request, *args, **kwargs):
+        logout(request)
+        return render(
+            request,
+            self.template_name,
+            {"signin_form": SigninForm, "error_display": "false"},
+        )

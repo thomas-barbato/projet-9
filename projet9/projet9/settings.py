@@ -50,9 +50,10 @@ TEMPLATES = [
         "DIRS": [
             os.path.join(BASE_DIR, "core", "templates/core/"),
             os.path.join(
-                os.path.join(BASE_DIR, "frontend", "templates/frontend/"),
-                "authentication",
+                os.path.join(BASE_DIR, "frontend", "templates/frontend/core/"),
+                "authentication"
             ),
+            os.path.join(BASE_DIR, "core", "templates/core/pannels"),
         ],
         "APP_DIRS": True,
         "OPTIONS": {
@@ -72,6 +73,33 @@ LOGIN_REDIRECT_URL = "core.login_view"
 LOGOUT_REDIRECT_URL = "core.login_view"
 
 WSGI_APPLICATION = "projet9.wsgi.application"
+
+"""
+    SESSIONS
+"""
+SESSION_ENGINE = 'django.contrib.sessions.backends.cached_db'
+SESSION_SERIALIZER = 'django.contrib.sessions.serializers.JSONSerializer'
+SESSION_EXPIRE_AT_BROWSER_CLOSE = False
+SESSION_COOKIE_AGE =  18000 # 5 hours
+#SESSION_SAVE_EVERY_REQUEST = True
+SESSION_COOKIE_SECURE = True
+SESSION_COOKIE_SAMESITE = 'Lax'
+
+"""
+    COOKIES POLICIES
+"""
+CSRF_COOKIE_SECURE = True
+CSRF_COOKIE_SAMESITE = 'Lax'
+
+"""
+    X FRAME
+"""
+X_FRAME_OPTIONS = 'SAMEORIGIN'
+
+"""
+    NOSNIF : PERMIT TO WEBNAV TO GUESS WHAT KIND OF FILE YOU RUN.
+"""
+SECURE_CONTENT_TYPE_NOSNIFF = False
 
 
 # Database

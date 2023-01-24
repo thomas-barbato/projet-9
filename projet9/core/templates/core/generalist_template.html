@@ -18,6 +18,34 @@
     <body>
         {% block title %}
             <title>LITReview</title>
+            {# create variable with project path, named = "path" #}
+            {% with request.get_full_path as path %}
+                {% block not_editable_js %}
+                <script>
+                    $('.logout').on('click', function(){
+                        $.ajax({
+                            type:'POST',
+                            url:'{% url "user_logout" %}',
+                            data:{
+                                csrfmiddlewaretoken: '{{ csrf_token }}',
+                                action: 'post'
+                            },
+                            success(json){
+                            }
+                        });
+                    })
+                </script>
+                {% endblock %}
+                {% if user.is_authenticated %}
+                    {% if 'dashboard' in path %}
+                        {% include "logged-in-top-pannel.html" %}
+                    {% else %}
+                        {% include "base-top-pannel.html" %}
+                    {% endif %}
+                {% else %}
+                    {% include "base-top-pannel.html" %}
+                {% endif %}
+            {% endwith %}
         {% endblock %}
         
         {% block content %}
