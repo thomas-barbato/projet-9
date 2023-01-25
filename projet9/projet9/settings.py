@@ -12,7 +12,6 @@ ROOT_DIR = os.path.dirname(PROJECT_DIR)
 APPS_DIR = os.path.realpath(os.path.join(ROOT_DIR, "oc-projet-9"))
 sys.path.append(APPS_DIR)
 
-
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
@@ -22,13 +21,14 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = [
+    "core",
+    "daphne",
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
-    "core",
 ]
 
 MIDDLEWARE = [
@@ -73,6 +73,13 @@ LOGIN_REDIRECT_URL = "core.login_view"
 LOGOUT_REDIRECT_URL = "core.login_view"
 
 WSGI_APPLICATION = "projet9.wsgi.application"
+ASGI_APPLICATION = "projet9.asgi.application"
+CHANNEL_LAYERS = {
+    'default': {
+        'BACKEND': "channels.layers.InMemoryChannelLayer"
+        }
+    }
+
 
 """
     SESSIONS
@@ -152,6 +159,10 @@ STATICFILES_DIRS = [
     os.path.join(BASE_DIR, "core" + STATIC_URL),
 ]
 STATIC_ROOT = os.path.join(BASE_DIR, "projet9" + STATIC_URL)
+
+MEDIA_URL = "/media/"
+MEDIA_ROOT = os.path.join(BASE_DIR, "core" + MEDIA_URL)
+
 
 """
     JSON FIXTURES

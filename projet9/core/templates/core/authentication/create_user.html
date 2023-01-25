@@ -2,6 +2,12 @@
 {% load static %}
 {% block content %}
 <div class="container-fluid main-container">
+    <div class="row no-gutters col-12 d-flex justify-content-center">
+        <div class="row no-gutters col-12">
+            <h2 class="text-center"><b>LITR</b>eview</h2>
+        </div>
+    </div>
+    <hr>
     <div class="row no-gutters d-flex justify-content-center">
         <h4 class="text-center"><i>Inscrivez-vous</i></h4>
         <div class="col-xl-4 col-md-4 col-sm-12">
@@ -12,6 +18,8 @@
                 {{ signup_form.password }}
                 {{ signup_form.password2 }}
                 <div id="password_error"></div>
+                
+
                 <div class="col-12 text-center mt-2 d-flex justify-content-end">
                     <form method="GET" action="{% url 'login_view' %}" class=" text-align-center col-6">
                         <button type="button" class="btn btn-success return-button col-4 " value="back_to_login_view">Retourner</button>
@@ -36,6 +44,7 @@
 
     $('.signup-button').on('click', function(){
         let url = "{% url 'registration_view' %}";
+        let redirect_url = "{% url 'login_view' %}";
         let username = $('#id_username').val();
         let password = $('#id_password').val();
         let password2 = $('#id_password2').val();
@@ -52,23 +61,21 @@
             },
             success(json){
                 if(json.status == 1){
-
-                    let url_redirect = "{% url 'registration_success_view' %}";
-                    window.location = url_redirect
+                    window.location = redirect_url
                 }else{
                     let password_elem = $('#password_error')
                     let username_elem = $('#username_error')
                     $.each(json.errors, function( index, value ) {
                       if(index === "password" || index === "password2" || index === "__all__"){
                         password_elem.html(value);
-                        password_elem.show()
+                        password_elem.show().fadeOut(10000);
                       }else if(index === "username"){
                         username_elem.html(value);
-                        username_elem.show()
+                        username_elem.show().fadeOut(10000);
                       }
                     });
                 }
-
+                
             }
 
         })

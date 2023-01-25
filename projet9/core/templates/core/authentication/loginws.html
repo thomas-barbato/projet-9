@@ -30,7 +30,7 @@
             <div class="col-12 text-center">
                 <p><b>Connectez-vous</b></p>
             </div>
-            <form method="POST" action="">
+            <form method="POST" action="" name="login-form" id="login-form">
                 {% csrf_token %}
                 {{ signin_form.username }}
                 {{ signin_form.password }}
@@ -49,9 +49,25 @@
 {% endblock %}
 {% block javascript %}
 <script>
+    $('.login-policy').hide()
 
-$('.login-policy').hide()
+    $('.login-button').on('click', function(){
+        let loginSocket = new WebSocket("ws://" + window.location.host + "/login/");
+        let u = $('#id_username').val()
+        let pswd = $('#id_password').val()
+        if(u != null && pswd != null ){
+            
+            loginSocket.onopen = function() {
+                let message = { 'username': u,'password': pswd }
+                loginSocket.send(JSON.stringify(message));
+            }
+        }
+    })
 
+
+
+
+/*
 $('.login-button').on('click', function(){
     let url = "{% url 'login_view' %}";
     let username = $('#id_username').val();
@@ -80,7 +96,7 @@ $('.login-button').on('click', function(){
 
     })
 })
-
+*/
 $('.welcome-msg').fadeOut(5000);
 
 </script>

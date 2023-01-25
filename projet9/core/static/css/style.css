@@ -1,22 +1,25 @@
-.main-container{
-    #background-color:#020216;
-    height:fille-container;
+.main-container {
+    /*background-color: #020216;*/
+    height: fille-container;
 }
 
-.form-input-text{
-    text-align:center;
+.form-input-text {
+    text-align: center;
 }
 
 li {
-    list-style:none;
+    list-style: none;
 }
 
-.alert{
-
+.alert {
     text-justify: auto;
 }
 
-.nav-link:hover{
-    transform: scale(1.1)
-    color:whitesmoke;
+.nav-link:hover {
+    transform: scale(1.1);
+    color: whitesmoke;
+}
+
+.btn-space {
+    margin-right: 5px;
 }

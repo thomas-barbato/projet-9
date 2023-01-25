@@ -1,0 +1,14 @@
+{% extends "generalist_template.html" %}
+{% load static %}
+{% block content %}
+<div class="container-fluid d-flex justify-content-center">
+    <div class="row col-6 d-flex justify-content-center mt-5">
+        <button type="button" class="btn btn-secondary btn-space col-xl-5 col-md-5 col-sm-10">Demander une critique</button>
+        <form method="GET" action="{% url 'create_ticket' %}" class="btn-space col-xl-5 col-md-5 col-sm-10">
+            <button type="submit" class="btn btn-secondary col-12">Créer une critique</button>
+        </form>
+    </div>
+</div>
+{% endblock %}
+{% block javascript %}
+{% endblock %}

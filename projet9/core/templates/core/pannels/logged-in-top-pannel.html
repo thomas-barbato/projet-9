@@ -1,3 +1,4 @@
+{% load static %}
 <nav class="navbar navbar-expand-md navbar-dark bg-dark">
     <button class="navbar-toggler" type="button" data-toggle="collapse" data-target=".dual-collapse2">
         <span class="navbar-toggler-icon"></span>
@@ -6,19 +7,33 @@
         <div class="mx-auto order-0">
             <p class="navbar-brand mr-auto"><b>LITR</b>eview</p>
         </div>
+        {% with request.get_full_path as path %}
         <ul class="navbar-nav ml-auto order-1">
             <li class="nav-item">
-                <a class="nav-link" href="">Flux</a>
+                {% if "flux" in path %}
+                <a class="nav-link" href="{% url 'flux_view' %}"><b>Flux</b></a>
+                {% else %}
+                <a class="nav-link" href="{% url 'flux_view' %}">Flux</a>
+                {% endif %}
             </li>
             <li class="nav-item">
-                <a class="nav-link" href="#">Posts</a>
+                {% if "posts" in path %}
+                <a class="nav-link" href=""><b>Posts</b></a>
+                {% else %}
+                <a class="nav-link" href="">Posts</a>
+                {% endif %}
             </li>
             <li class="nav-item">
-                <a class="nav-link" href="#">Abonnements</a>
+                {% if "abonnements" in path %}
+                <a class="nav-link" href=""><b>Abonnements</b></a>
+                {% else %}
+                <a class="nav-link" href="">Abonnements</a>
+                {% endif %}
             </li>
             <li class="nav-item">
                 <a class="nav-link" href="{% url 'user_logout' %}">Se déconnecter</a>
             </li>
         </ul>
+        {% endwith %}
     </div>
 </nav>

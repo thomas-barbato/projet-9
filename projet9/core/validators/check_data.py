@@ -2,6 +2,8 @@ from django.core.exceptions import ValidationError
 from django.utils.safestring import mark_safe
 from django.utils.translation import gettext as _
 from django.contrib.auth.models import User
+from ..models import Ticket
+from pathlib import Path
 import re
 
 
@@ -83,3 +85,26 @@ class CheckUsernameAlreadyUsed:
             "</ul>"
             "</div>"
         )
+
+
+class CheckImageExtension:
+    def __init__(self):
+        self.table = Ticket
+        
+    def validate(self, filename):
+        """
+        check if extension is allowed.
+        """
+        if Path(filename).suffixes[0].lower() not in ['.jpg', '.png']:
+            raise ValidationError(
+                _(
+                    mark_safe(
+                        '<div class="alert alert-danger text-center col-xl-12 col-md-12 col-sm-10 mt-1" role="alert">'
+                        "<p><b><i class="
+                        + '"fas fa-exclamation-triangle"'
+                        + "></i> Extensions autorisées: .jpg et .png</b></p>"
+                        "</div>"
+                    )
+                ),
+                code="extension_not_allowed",
+            )

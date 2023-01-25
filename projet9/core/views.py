@@ -1,3 +1,4 @@
+from channels.generic.websocket import AsyncWebsocketConsumer
 from django.shortcuts import render, redirect, HttpResponseRedirect
 from django.http import HttpResponse
 from django.contrib.auth import authenticate, login, logout
@@ -5,7 +6,6 @@ from django.views import View
 from django.contrib.auth.decorators import login_required
 from django.contrib.sessions.models import Session
 from django.views.generic import RedirectView
-
 from .forms import *
 from .models import *
 from django.views.decorators.csrf import csrf_protect, csrf_exempt
@@ -17,6 +17,7 @@ from django.urls import reverse
 from django import forms
 import datetime
 import json
+from .classes.files import HandleUploadedFile
 
 
 class CreateUserView(View):
@@ -63,7 +64,7 @@ class CreateUserView(View):
 
 class SignupSuccessView(View):
     login_url = settings.LOGIN_URL
-    template_name = "dashboard/dashboard.html"
+    template_name = "dashboard/flux.html"
 
     def get(self, request, *args, **kwargs):
         return render(
@@ -108,13 +109,38 @@ class LoginView(View):
             )
 
 
-
-class DashboardView(LoginRequiredMixin, View):
+class FluxView(LoginRequiredMixin, View):
     login_url = settings.LOGIN_URL
-    template_name = "dashboard/dashboard.html"
+    template_name = "dashboard/flux.html"
+    
+    def get(self, request, *args, **kwargs):
+        return render(request, self.template_name)
+
+
+class CreateTicketView(LoginRequiredMixin, View):
+    login_url = settings.LOGIN_URL
+    template_name = "dashboard/create_ticket.html"
 
     def get(self, request, *args, **kwargs):
         return render(request, self.template_name)
+    
+    @method_decorator(csrf_protect)
+    def post(self, request, *args, **kwargs):
+        print(request.POST)
+        print(request.FILES['image'])
+        form = CreateTicketForm(request.POST, request.FILES)
+        if form.is_valid():
+            HandleUploadedFile(request.FILES['image'], request.FILES['image'].name)
+            Ticket.objects.create(
+                title = form.cleaned_data["title"],
+                description = form.cleaned_data["description"],
+                user_id = request.user.id,
+                image = request.FILES['image'].name,
+            )
+            return render(request, "dashboard/flux.html")
+        else:
+            # A FAIRE !
+            print("non")
 
 
 class UserLogout(RedirectView):
@@ -128,3 +154,4 @@ class UserLogout(RedirectView):
             self.template_name,
             {"signin_form": SigninForm, "error_display": "false"},
         )
+        

@@ -1,0 +1,47 @@
+{% extends "generalist_template.html" %}
+{% load static %}
+{% block content %}
+<div class="container-fluid">
+    <div class="row no-gutters mt-2">
+        <h3 class="text-center">Créer un ticket</h3>
+    </div>
+    <form action="{% url 'create_ticket' %}" enctype="multipart/form-data" method="POST">
+        {% csrf_token %}
+        <div class="row no-gutters mt-3 col-12 d-flex justify-content-center">
+            <div class="col-xl-6 col-md-6 col-sm-10">
+                <label for="ticket-title" class="justify-content-start"><h4>Titre</h4></label>
+                <input type="text" class="form-control" id="id_title" name="title" required></input>
+            </div>
+        </div>
+        <div class="row no-gutters mt-3 col-12 d-flex justify-content-center">
+            <div class="col-xl-6 col-md-6 col-sm-10">
+                <label for="ticket-description" class="justify-content-start"><h4>Description</h4></label>
+                <textarea name="description" class="form-control"  id="id_description" spellcheck="false" required></textarea>
+            </div>
+        </div>
+        <div class="row no-gutters mt-3 col-12 d-flex justify-content-center">
+            <div class="col-xl-6 col-md-6 col-sm-10">
+                <label for="ticket-image" class="justify-content-start"><h4>Choisissez une illustration</h4></label>
+                <input type="file" id="id_image" name="image" accept=".jpg, .png" required />
+            </div>
+        </div> 
+        <div class="row no-gutters mt-3 col-12 d-flex justify-content-center">
+            <div class="col-xl-6 col-md-3 col-sm-10 d-flex justify-content-end">
+                <button type="submit" class="btn btn-secondary col-4">Envoyer</button>
+            </div>
+        </div> 
+    </form>
+</div>
+{% endblock %}
+{% block javascript %}
+<script>
+    $(window).on('load', function(){
+        
+        description_editor = CKEDITOR.replace('id_description',
+        {
+            customConfig : 'config_custom.js',
+            height: '20vh',
+        })
+    })
+</script>
+{% endblock %}

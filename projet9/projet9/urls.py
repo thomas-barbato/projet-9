@@ -29,9 +29,14 @@ urlpatterns = [
         name="registration_success_view",
     ),
     path(
-        "dashboard",
-        core_views.DashboardView.as_view(template_name="dashboard/dashboard.html"),
-        name="dashboard_view",
+        "dashboard/flux",
+        core_views.FluxView.as_view(template_name="dashboard/flux.html"),
+        name="flux_view",
+    ),
+    path(
+        "dashboard/create_ticket",
+        core_views.CreateTicketView.as_view(template_name="dashboard/create_ticket.html"),
+        name="create_ticket",
     ),
     path(
         "logout",

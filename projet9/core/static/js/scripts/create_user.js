@@ -29,11 +29,9 @@ function create_user(url, url_redirect){
                     let username_elem = $('#username_error')
                     $.each(json.errors, function( index, value ) {
                       if(index === "password" || index === "password2" || index === "__all__"){
-                        password_elem.html(value);
-                        password_elem.show()
+                        password_elem.html(value).show()
                       }else if(index === "username"){
-                        username_elem.html(value);
-                        username_elem.show()
+                        username_elem.html(value).show()
                       }
                     });
                 }

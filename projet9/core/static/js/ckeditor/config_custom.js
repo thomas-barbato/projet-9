@@ -10,7 +10,6 @@ CKEDITOR.editorConfig = function(config) {
         { name: 'colors', groups: ['colors'] },
         { name: 'tools', groups: ['tools'] },
         { name: 'others', groups: ['others'] },
-        { name: 'about', groups: ['about'] }
     ];
 
     config.removeButtons = 'Save,Templates,ExportPdf,Preview,Print,Table,Flash,Image,HorizontalRule,Smiley,SpecialChar,PageBreak,Iframe,Unlink,Link,Anchor,Language,BidiRtl,BidiLtr, Blockquote,Form,Checkbox,Radio,TextField,Textarea,Button,Select,HiddenField,About,NewPage,Source,CreateDiv,Styles,Format,Subscript,Superscript';
