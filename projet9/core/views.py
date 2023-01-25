@@ -126,8 +126,6 @@ class CreateTicketView(LoginRequiredMixin, View):
     
     @method_decorator(csrf_protect)
     def post(self, request, *args, **kwargs):
-        print(request.POST)
-        print(request.FILES['image'])
         form = CreateTicketForm(request.POST, request.FILES)
         if form.is_valid():
             HandleUploadedFile(request.FILES['image'], request.FILES['image'].name)
