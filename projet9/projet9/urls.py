@@ -36,7 +36,12 @@ urlpatterns = [
     path(
         "dashboard/create_ticket",
         core_views.CreateTicketView.as_view(template_name="dashboard/create_ticket.html"),
-        name="create_ticket",
+        name="create_ticket_view",
+    ),
+    path(
+        "dashboard/create_review",
+        core_views.CreateReviewView.as_view(template_name="dashboard/create_review.html"),
+        name="create_review_view",
     ),
     path(
         "logout",

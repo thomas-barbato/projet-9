@@ -1,9 +1,7 @@
 from channels.generic.websocket import AsyncWebsocketConsumer
 from django.shortcuts import render, redirect, HttpResponseRedirect
-from django.http import HttpResponse
 from django.contrib.auth import authenticate, login, logout
 from django.views import View
-from django.contrib.auth.decorators import login_required
 from django.contrib.sessions.models import Session
 from django.views.generic import RedirectView
 from .forms import *
@@ -14,7 +12,6 @@ from django.conf import settings
 from django.utils.decorators import method_decorator
 from django.http import HttpResponseRedirect, JsonResponse
 from django.urls import reverse
-from django import forms
 import datetime
 import json
 from .classes.files import HandleUploadedFile
@@ -112,7 +109,7 @@ class LoginView(View):
 class FluxView(LoginRequiredMixin, View):
     login_url = settings.LOGIN_URL
     template_name = "dashboard/flux.html"
-    
+
     def get(self, request, *args, **kwargs):
         return render(request, self.template_name)
 
@@ -135,10 +132,52 @@ class CreateTicketView(LoginRequiredMixin, View):
                 user_id = request.user.id,
                 image = request.FILES['image'].name,
             )
-            return render(request, "dashboard/flux.html")
+            return render(
+                request,
+                "dashboard/flux.html",
+                {"ticket_creation_success": "true"},)
         else:
-            # A FAIRE !
-            print("non")
+            return render(request, self.template_name, {"ticket_creation_error": "true"})
+
+
+class CreateReviewView(LoginRequiredMixin, View):
+    login_url = settings.LOGIN_URL
+    template_name = "dashboard/create_review.html"
+
+    def get(self, request, *args, **kwargs):
+        return render(request, self.template_name,{'rating_range': range(6)})
+
+    @method_decorator(csrf_protect)
+    def post(self, request, *args, **kwargs):
+        review_form = CreateReviewForm(request.POST)
+        ticket_form = CreateTicketForm(request.POST, request.FILES)
+        if review_form.is_valid() and ticket_form.is_valid():
+            HandleUploadedFile(request.FILES['image'], request.FILES['image'].name)
+            Ticket.objects.create(
+                title = ticket_form.cleaned_data["title"],
+                description = ticket_form.cleaned_data["description"],
+                user_id = request.user.id,
+                image = request.FILES['image'].name,
+            )
+            ticket = Ticket.objects.get(
+                title=ticket_form.cleaned_data["title"],
+                description= ticket_form.cleaned_data["description"],
+                user_id=request.user.id,
+                image = request.FILES['image'].name,
+            )
+            Review.objects.create(
+                rating = int(review_form.cleaned_data["rating"]),
+                headline = review_form.cleaned_data["headline"],
+                body = review_form.cleaned_data["body"],
+                ticket_id = ticket.id,
+                user_id = request.user.id
+            )
+            return render(
+                request,
+                "dashboard/flux.html",
+                {"ticket_creation_success": "true"},)
+        else:
+            return render(request, self.template_name, {"ticket_creation_error": "true", 'rating_range': range(6)})
 
 
 class UserLogout(RedirectView):

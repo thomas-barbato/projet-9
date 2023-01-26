@@ -1,0 +1,98 @@
+{% extends "generalist_template.html" %}
+{% load static %}
+{% block content %}
+<div class="container-fluid">
+    <div class="row no-gutters mt-2">
+        <h3 class="text-center">Créer une critique</h3>
+    </div>
+    <div class="row no-gutters mt-1 d-flex justify-content-center">
+        <form action="{% url 'create_review_view' %}" enctype="multipart/form-data" method="POST">
+            <div class="review-form col-8 mx-auto">
+                {% csrf_token %}
+                <div class="row no-gutters col-12 mx-auto mb-1">
+                   <small>Livre / Article</small>
+                </div>
+                <div class="row no-gutters mt-2 col-12 mx-auto">
+                    <div class="col-xl-12 col-md-12 col-sm-10">
+                        <label for="id_title" class="justify-content-start"><h5><b>Titre</b></h5></label>
+                        <input type="text" class="form-control" id="id_title" name="title" required/>
+                    </div>
+                </div>
+                <div class="row no-gutters mt-3 col-12 d-flex mx-auto">
+                    <div class="col-xl-12 col-md-12 col-sm-10">
+                        <label for="id_description" class="justify-content-start"><h5><b>Description</b></h5></label>
+                        <textarea name="description" class="form-control" id="id_description" spellcheck="false" required></textarea>
+                    </div>
+                </div>
+                <div class="row no-gutters mt-3 col-12 mx-auto">
+                    <label for="id_image" class="justify-content-start"><h5><b>Image</b></h5></label>
+                    <div class="col-xl-12 col-md-12 col-sm-10 mb-3">
+                        <button class="btn btn-secondary fake-input-file">Télécharger fichier</button>
+                        <input type="file" id="id_image" name="image" class="hidden-input-file" accept=".jpg, .png" required />
+                    </div>
+                </div>
+            </div>
+            <div class="review-form col-8 mx-auto mb-3">
+                <div class="row no-gutters col-12 mx-auto mb-1">
+                   <small>Critique</small>
+                </div>
+                <div class="row no-gutters mt-2 col-12 mx-auto">
+                    <div class="col-xl-12 col-md-12 col-sm-10">
+                        <label for="id_headline" class="justify-content-start"><h5><b>Titre</b></h5></label>
+                        <input type="text" class="form-control" id="id_headline" name="headline" required/>
+                    </div>
+                </div>
+                <div class="row no-gutters mt-2 col-12 mx-auto">
+                    <label for="id_rating" class="justify-content-start"><h5><b>Note</b></h5></label>
+                    <div class="col-xl-12 col-md-12 col-sm-10 d-flex justify-content-center">
+                        {% for i in rating_range %}
+                            <label class="radio-inline col-2">
+                              <input type="radio" class="review-rating" id="id_rating" name="rating" value="{{ i }}"> - {{ i }}
+                            </label>
+                        {% endfor %}
+                    </div>
+                </div>
+                <div class="row no-gutters mt-3 col-12 d-flex mx-auto">
+                    <div class="col-xl-12 col-md-12 col-sm-10">
+                        <label for="id_body" class="justify-content-start"><h5><b>Description</b></h5></label>
+                        <textarea name="body" class="form-control" id="id_body" spellcheck="false" required></textarea>
+                    </div>
+                </div>
+                <div class="row no-gutters mt-3 mb-3 col-12">
+                    <div class="col-xl-12 col-md-12 col-sm-10">
+                        <div class="col-xl-12 col-md-3 col-sm-10 d-flex justify-content-end">
+                            <button type="submit" class="btn btn-secondary col-xl-4 col-md-4 col-sm-6 ">Envoyer</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+{% block javascript %}
+<script>
+
+    $(window).on('load', function(){
+
+        description_editor = CKEDITOR.replace('id_description',
+        {
+            customConfig : 'config_custom.js',
+            height: '20vh',
+        })
+
+        body_editor = CKEDITOR.replace('id_body',
+        {
+            customConfig : 'config_custom.js',
+            height: '20vh',
+        })
+    })
+    $('.fake-input-file').on('click', function(){
+        $('.hidden-input-file').click();
+    })
+    $('.review-rating').on('click', function(){
+        console.log($('.review-rating:checked').val())
+    })
+
+</script>
+{% endblock %}

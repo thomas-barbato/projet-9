@@ -87,4 +87,29 @@ class CreateTicketForm(forms.Form):
         validators=[],
         required=True
     )
-    
+
+class CreateReviewForm(forms.Form):
+    headline = forms.CharField(
+        widget=TextInput(
+            attrs={
+            }
+        ),
+        required=True,
+        label="",
+    )
+    rating = forms.IntegerField(
+        widget=TextInput(
+            attrs={
+            }
+        ),
+        required=True,
+        label="",
+    )
+    body = forms.CharField(
+        widget=TextInput(
+            attrs={
+            }
+        ),
+        required=True,
+        label="",
+    )

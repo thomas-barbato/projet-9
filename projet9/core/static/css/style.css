@@ -23,3 +23,11 @@ li {
 .btn-space {
     margin-right: 5px;
 }
+
+.review-form{
+    border:1px solid black;
+}
+
+.hidden-input-file{
+    display:none;
+}
