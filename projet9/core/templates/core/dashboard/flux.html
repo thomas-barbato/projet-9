@@ -3,6 +3,16 @@
 {% block content %}
 <div class="container-fluid d-flex justify-content-center">
     <div class="row col-6 d-flex justify-content-center mt-5">
+        {% if messages %}
+        <ul class="messages">
+            {% for message in messages %}
+            <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>
+                {% if message.level == DEFAULT_MESSAGE_LEVELS.ERROR %}Important: {% endif %}
+                {{ message|safe }}
+            </li>
+            {% endfor %}
+        </ul>
+        {% endif %}
         <form method="GET" action="{% url 'create_ticket_view' %}" class="btn-space col-xl-5 col-md-5 col-sm-10">
             <button type="submit" class="btn btn-secondary col-12">Demander une critique</button>
         </form>
@@ -13,4 +23,11 @@
 </div>
 {% endblock %}
 {% block javascript %}
+<script>
+    {% if messages %}
+        $('ul.messages').fadeOut(10000);
+    {% endif %}
+    console.log(test)
+</script>
+
 {% endblock %}

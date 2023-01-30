@@ -5,48 +5,48 @@
     <div class="row no-gutters mt-2">
         <h3 class="text-center">Créer un ticket</h3>
     </div>
-    <form action="{% url 'create_ticket_view' %}" enctype="multipart/form-data" method="POST">
-        {% csrf_token %}
-        <div class="row no-gutters mt-3 col-12 d-flex justify-content-center">
-            <div class="col-xl-6 col-md-6 col-sm-10">
-                <label for="id_title" class="justify-content-start"><h5><b>Titre</b></h5></label>
-                <input type="text" class="form-control" id="id_title" name="title" required></input>
+    {% if messages %}
+    <ul class="messages">
+        {% for message in messages %}
+        <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>
+            {% if message.level == DEFAULT_MESSAGE_LEVELS.ERROR %}Important: {% endif %}
+            {{ message|safe }}
+        </li>
+        {% endfor %}
+    </ul>
+    {% endif %}
+    <form action="" enctype="multipart/form-data" method="POST">
+        <div class="col-8 mx-auto">
+            {% csrf_token %}
+            <div class="row no-gutters mt-3 col-12 d-flex justify-content-center">
+                <div class="col-xl-6 col-md-6 col-sm-10">
+                    <label for="id_title" class="justify-content-start"><h5><b>Titre</b></h5></label>
+                    <input type="text" class="form-control" id="id_title" name="title" required></input>
+                </div>
+            </div>
+            <div class="row no-gutters mt-3 col-12 d-flex justify-content-center">
+                <div class="col-xl-6 col-md-6 col-sm-10">
+                    <label for="id_description" class="justify-content-start"><h5><b>Description</b></h5></label>
+                    <textarea name="description" class="form-control"  id="id_description" spellcheck="false" required></textarea>
+                </div>
+            </div>
+            <div class="row no-gutters mt-3 col-12 d-flex justify-content-center">
+                <div class="col-xl-6 col-md-6 col-sm-10">
+                    <label for="id_image" class="justify-content-start"><h5><b>Image</b></h5></label>
+                    <button class="btn btn-secondary fake-input-file">Télécharger fichier</button>
+                    <input type="file" id="id_image" class="hidden-input-file" name="image" accept=".jpg, .png" required />
+                </div>
+            </div>
+            <div class="row no-gutters mt-3 col-12 d-flex justify-content-center">
+                <div class="col-xl-6 col-md-3 col-sm-10 d-flex justify-content-end">
+                    <button type="submit" class="btn btn-secondary col-4 create-ticket-button">Envoyer</button>
+                </div>
             </div>
         </div>
-        <div class="row no-gutters mt-3 col-12 d-flex justify-content-center">
-            <div class="col-xl-6 col-md-6 col-sm-10">
-                <label for="id_description" class="justify-content-start"><h5><b>Description</b></h5></label>
-                <textarea name="description" class="form-control"  id="id_description" spellcheck="false" required></textarea>
-            </div>
-        </div>
-        <div class="row no-gutters mt-3 col-12 d-flex justify-content-center">
-            <div class="col-xl-6 col-md-6 col-sm-10">
-                <label for="id_image" class="justify-content-start"><h5><b>Image</b></h5></label>
-                <button class="btn btn-secondary fake-input-file">Télécharger fichier</button>
-                <input type="file" id="id_image" class="hidden-input-file" name="image" accept=".jpg, .png" required />
-            </div>
-        </div>
-        <div class="row no-gutters mt-3 col-12 d-flex justify-content-center">
-            <div class="col-xl-6 col-md-3 col-sm-10 d-flex justify-content-end">
-                <button type="submit" class="btn btn-secondary col-4">Envoyer</button>
-            </div>
-        </div> 
     </form>
 </div>
 {% endblock %}
 {% block javascript %}
-<script>
-    $(window).on('load', function(){
-        
-        description_editor = CKEDITOR.replace('id_description',
-        {
-            customConfig : 'config_custom.js',
-            height: '20vh',
-        })
-    })
-
-    $('.fake-input-file').on('click', function(){
-        $('.hidden-input-file').click();
-    })
+<script src="{% static 'js/scripts/create_ticket.js' %}" type="text/javascript">
 </script>
 {% endblock %}

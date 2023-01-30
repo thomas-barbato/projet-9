@@ -21,9 +21,7 @@ class ReviewTest(TestCase):
         self.user = User.objects.get(username="test")
         self.user2 = User.objects.get(username="test2")
         self.ticket = Ticket.objects.get(title="un titre", user_id=self.user.id)
-        self.review = Review.objects.get(
-            ticket_id=self.ticket.id, user_id=self.user.id
-        )
+        self.review = Review.objects.get(ticket_id=self.ticket.id, user_id=self.user.id)
         self.userfollows = UserFollows.objects.get(
             followed_user_id=self.user2.id, user_id=self.user.id
         )

@@ -15,6 +15,7 @@ from django.urls import reverse
 import datetime
 import json
 from .classes.files import HandleUploadedFile
+from django.contrib import messages
 
 
 class CreateUserView(View):
@@ -37,26 +38,27 @@ class CreateUserView(View):
                     is_staff=False,
                     date_joined=datetime.datetime.now(),
                 ).save()
-                response = {'status': 1, 'url_redirect': "registration_success_view"}
-                return JsonResponse(
-                    response
+                messages.add_message(
+                    request,
+                    messages.SUCCESS,
+                    '<div class="alert alert-success text-center col-xl-12 col-md-12 col-sm-10 mt-1" role="alert">'
+                    "<p>Vous êtes maintenant inscrit.</p>"
+                    "</div>",
                 )
+                response = {"status": 1}
+                return JsonResponse(response)
             else:
                 data.add_error(
                     None,
                     '<div class="alert alert-danger text-center col-xl-12 col-md-12 col-sm-10 mt-1" role="alert">'
-                    '<p>Veuillez entrer deux fois le même mot de passe.</p>'
-                    '</div>',
+                    "<p>Veuillez entrer deux fois le même mot de passe.</p>"
+                    "</div>",
                 )
-                response = {'status': 0, 'errors': dict(data.errors.items())}
-                return JsonResponse(
-                    response
-                )
+                response = {"status": 0, "errors": dict(data.errors.items())}
+                return JsonResponse(response)
         else:
-            response = {'status': 0, 'errors': dict(data.errors.items())}
-            return JsonResponse(
-                response
-            )
+            response = {"status": 0, "errors": dict(data.errors.items())}
+            return JsonResponse(response)
 
 
 class SignupSuccessView(View):
@@ -69,6 +71,7 @@ class SignupSuccessView(View):
             self.template_name,
             {"signin_form": SigninForm, "user_creation_success": "true"},
         )
+
 
 class LoginView(View):
     template_name: str = "authentication/login.html"
@@ -90,20 +93,21 @@ class LoginView(View):
             )
             if user is not None:
                 login(request, user)
-                response = {'status': 1}
-                return JsonResponse(
-                    response
+                response = {"status": 1}
+                messages.add_message(
+                    request,
+                    messages.SUCCESS,
+                    '<div class="alert alert-success text-center col-xl-12 col-md-12 col-sm-10 mt-1" role="alert">'
+                    "<p>Vous êtes maintenant connecté.</p>"
+                    "</div>",
                 )
+                return JsonResponse(response)
             else:
-                response = {'errors': "true"}
-                return JsonResponse(
-                    response
-                )
+                response = {"errors": "true"}
+                return JsonResponse(response)
         else:
-            response = {'errors': "true"}
-            return JsonResponse(
-                response
-            )
+            response = {"errors": "true"}
+            return JsonResponse(response)
 
 
 class FluxView(LoginRequiredMixin, View):
@@ -120,24 +124,37 @@ class CreateTicketView(LoginRequiredMixin, View):
 
     def get(self, request, *args, **kwargs):
         return render(request, self.template_name)
-    
+
     @method_decorator(csrf_protect)
     def post(self, request, *args, **kwargs):
         form = CreateTicketForm(request.POST, request.FILES)
         if form.is_valid():
-            HandleUploadedFile(request.FILES['image'], request.FILES['image'].name)
+            file = HandleUploadedFile(request.FILES["image"], request.FILES["image"].name)
             Ticket.objects.create(
-                title = form.cleaned_data["title"],
-                description = form.cleaned_data["description"],
-                user_id = request.user.id,
-                image = request.FILES['image'].name,
+                title=form.cleaned_data["title"],
+                description=form.cleaned_data["description"],
+                user_id=request.user.id,
+                image=file.get_filename(),
             )
-            return render(
+            messages.add_message(
                 request,
-                "dashboard/flux.html",
-                {"ticket_creation_success": "true"},)
+                messages.SUCCESS,
+                '<div class="alert alert-success text-center col-xl-12 col-md-12 col-sm-10 mt-1" role="alert">'
+                "<p>Votre demande de critique à été créée avec succès.</p>"
+                "</div>",
+            )
+            return HttpResponseRedirect(reverse('flux_view'))
+
         else:
-            return render(request, self.template_name, {"ticket_creation_error": "true"})
+            messages.add_message(
+                request,
+                messages.ERROR,
+                '<div class="alert alert-danger text-center col-xl-12 col-md-12 col-sm-10 mt-1" role="alert">'
+                "<p>Veuillez remplir les champs correctement.</p>"
+                "<p>Assurez vous que votre image est à la bonne extension : <b>.jpg, .png</b>.</p>"
+                "</div>",
+            )
+            return HttpResponseRedirect(reverse('create_ticket_view'))
 
 
 class CreateReviewView(LoginRequiredMixin, View):
@@ -145,39 +162,51 @@ class CreateReviewView(LoginRequiredMixin, View):
     template_name = "dashboard/create_review.html"
 
     def get(self, request, *args, **kwargs):
-        return render(request, self.template_name,{'rating_range': range(6)})
+        return render(request, self.template_name, {"rating_range": range(6)})
 
     @method_decorator(csrf_protect)
     def post(self, request, *args, **kwargs):
         review_form = CreateReviewForm(request.POST)
         ticket_form = CreateTicketForm(request.POST, request.FILES)
         if review_form.is_valid() and ticket_form.is_valid():
-            HandleUploadedFile(request.FILES['image'], request.FILES['image'].name)
+            file = HandleUploadedFile(request.FILES["image"], request.FILES["image"].name)
             Ticket.objects.create(
-                title = ticket_form.cleaned_data["title"],
-                description = ticket_form.cleaned_data["description"],
-                user_id = request.user.id,
-                image = request.FILES['image'].name,
+                title=ticket_form.cleaned_data["title"],
+                description=ticket_form.cleaned_data["description"],
+                user_id=request.user.id,
+                image=file.get_filename(),
             )
             ticket = Ticket.objects.get(
                 title=ticket_form.cleaned_data["title"],
-                description= ticket_form.cleaned_data["description"],
+                description=ticket_form.cleaned_data["description"],
                 user_id=request.user.id,
-                image = request.FILES['image'].name,
+                image=file.get_filename(),
             )
             Review.objects.create(
-                rating = int(review_form.cleaned_data["rating"]),
-                headline = review_form.cleaned_data["headline"],
-                body = review_form.cleaned_data["body"],
-                ticket_id = ticket.id,
-                user_id = request.user.id
+                rating=int(review_form.cleaned_data["rating"]),
+                headline=review_form.cleaned_data["headline"],
+                body=review_form.cleaned_data["body"],
+                ticket_id=ticket.id,
+                user_id=request.user.id,
             )
-            return render(
+            messages.add_message(
                 request,
-                "dashboard/flux.html",
-                {"ticket_creation_success": "true"},)
+                messages.SUCCESS,
+                '<div class="alert alert-success text-center col-xl-12 col-md-12 col-sm-10 mt-1" role="alert">'
+                "<p>Votre critique à été créée avec succès.</p>"
+                "</div>",
+            )
+            return HttpResponseRedirect(reverse('flux_view'))
         else:
-            return render(request, self.template_name, {"ticket_creation_error": "true", 'rating_range': range(6)})
+            messages.add_message(
+                request,
+                messages.ERROR,
+                '<div class="alert alert-danger text-center col-xl-12 col-md-12 col-sm-10 mt-1" role="alert">'
+                "<p>Veuillez remplir les champs correctement.</p>"
+                "<p>Assurez vous que votre image est à la bonne extension : <b>.jpg, .png</b>.</p>"
+                "</div>",
+            )
+            return HttpResponseRedirect(reverse('create_review_view'))
 
 
 class UserLogout(RedirectView):
@@ -191,4 +220,3 @@ class UserLogout(RedirectView):
             self.template_name,
             {"signin_form": SigninForm, "error_display": "false"},
         )
-        

@@ -36,6 +36,7 @@
                     })
                 </script>
                 {% endblock %}
+                {% include "jsvar.html." %}
                 {% if user.is_authenticated %}
                     {% if 'dashboard' in path %}
                         {% include "logged-in-top-pannel.html" %}

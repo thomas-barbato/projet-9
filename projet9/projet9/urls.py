@@ -9,7 +9,7 @@ from django.contrib.auth.views import LoginView
 import core
 from core import views as core_views
 
-app_name = 'core'
+app_name = "core"
 
 urlpatterns = [
     path("admin", admin.site.urls, name="admin"),
@@ -20,7 +20,9 @@ urlpatterns = [
     ),
     path(
         "registration",
-        core_views.CreateUserView.as_view(template_name="authentication/create_user.html"),
+        core_views.CreateUserView.as_view(
+            template_name="authentication/create_user.html"
+        ),
         name="registration_view",
     ),
     path(
@@ -35,12 +37,16 @@ urlpatterns = [
     ),
     path(
         "dashboard/create_ticket",
-        core_views.CreateTicketView.as_view(template_name="dashboard/create_ticket.html"),
+        core_views.CreateTicketView.as_view(
+            template_name="dashboard/create_ticket.html"
+        ),
         name="create_ticket_view",
     ),
     path(
         "dashboard/create_review",
-        core_views.CreateReviewView.as_view(template_name="dashboard/create_review.html"),
+        core_views.CreateReviewView.as_view(
+            template_name="dashboard/create_review.html"
+        ),
         name="create_review_view",
     ),
     path(

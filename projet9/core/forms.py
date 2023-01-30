@@ -1,7 +1,11 @@
 from django import forms
 from django.contrib.auth.forms import AuthenticationForm, UserCreationForm
 from django.forms.widgets import PasswordInput, TextInput
-from .validators.check_data import CheckPasswordPolicy, CheckUsernameAlreadyUsed, CheckImageExtension
+from .validators.check_data import (
+    CheckPasswordPolicy,
+    CheckUsernameAlreadyUsed,
+    CheckImageExtension,
+)
 
 
 class SigninForm(AuthenticationForm):
@@ -64,52 +68,32 @@ class SignupForm(forms.Form):
         help_text=CheckPasswordPolicy().get_help_text(),
     )
 
+
 class CreateTicketForm(forms.Form):
     title = forms.CharField(
-        widget=TextInput(
-            attrs={
-            }
-        ),
+        widget=TextInput(attrs={}),
         required=True,
         label="",
     )
-    description = forms.CharField(
-        widget=TextInput(
-            attrs={
-            }
-        ),
-        required=True
-    )
+    description = forms.CharField(widget=TextInput(attrs={}), required=True)
     image = forms.ImageField(
-        widget = forms.FileInput(
-            attrs = {}
-        ),
-        validators=[],
-        required=True
+        widget=forms.FileInput(attrs={}), validators=[CheckImageExtension().validate], required=True
     )
+
 
 class CreateReviewForm(forms.Form):
     headline = forms.CharField(
-        widget=TextInput(
-            attrs={
-            }
-        ),
+        widget=TextInput(attrs={}),
         required=True,
         label="",
     )
     rating = forms.IntegerField(
-        widget=TextInput(
-            attrs={
-            }
-        ),
+        widget=TextInput(attrs={}),
         required=True,
         label="",
     )
     body = forms.CharField(
-        widget=TextInput(
-            attrs={
-            }
-        ),
+        widget=TextInput(attrs={}),
         required=True,
         label="",
     )

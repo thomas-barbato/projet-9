@@ -90,12 +90,13 @@ class CheckUsernameAlreadyUsed:
 class CheckImageExtension:
     def __init__(self):
         self.table = Ticket
-        
-    def validate(self, filename):
+
+    def validate(self, file):
         """
         check if extension is allowed.
         """
-        if Path(filename).suffixes[0].lower() not in ['.jpg', '.png']:
+        allowed_extensions = [".jpg", ".png"]
+        if not Path(file.name.lower()).suffixes[0] in allowed_extensions:
             raise ValidationError(
                 _(
                     mark_safe(
