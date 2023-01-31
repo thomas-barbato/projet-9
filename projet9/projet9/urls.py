@@ -44,10 +44,17 @@ urlpatterns = [
     ),
     path(
         "dashboard/create_review",
-        core_views.CreateReviewView.as_view(
+        core_views.CreateFullReviewView.as_view(
             template_name="dashboard/create_review.html"
         ),
         name="create_review_view",
+    ),
+    path(
+        "dashboard/create_answer_review/<int:id>",
+        core_views.CreateReviewView.as_view(
+            template_name="dashboard/create_answer_review.html"
+        ),
+        name="answer_review_view",
     ),
     path(
         "logout",
@@ -55,3 +62,4 @@ urlpatterns = [
         name="user_logout",
     ),
 ] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
+urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
