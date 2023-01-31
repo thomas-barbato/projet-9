@@ -266,48 +266,44 @@ class CreateReviewView(LoginRequiredMixin, View):
 
 
     @method_decorator(csrf_protect)
-    def post(self, request, *args, **kwargs):
-        review_form = CreateReviewForm(request.POST)
-        ticket_form = CreateTicketForm(request.POST, request.FILES)
-        if review_form.is_valid() and ticket_form.is_valid():
-            file = HandleUploadedFile(request.FILES["image"], request.FILES["image"].name)
-            Ticket.objects.create(
-                title=ticket_form.cleaned_data["title"],
-                description=ticket_form.cleaned_data["description"],
-                user_id=request.user.id,
-                image=file.get_filename(),
-            )
-            ticket = Ticket.objects.get(
-                title=ticket_form.cleaned_data["title"],
-                description=ticket_form.cleaned_data["description"],
-                user_id=request.user.id,
-                image=file.get_filename(),
-            )
-            Review.objects.create(
-                rating=int(review_form.cleaned_data["rating"]),
-                headline=review_form.cleaned_data["headline"],
-                body=review_form.cleaned_data["body"],
-                ticket_id=ticket.id,
-                user_id=request.user.id,
-            )
-            messages.add_message(
-                request,
-                messages.SUCCESS,
-                '<div class="alert alert-success text-center col-xl-12 col-md-12 col-sm-10 mt-1" role="alert">'
-                "<p>Votre critique à été créée avec succès.</p>"
-                "</div>",
-            )
-            return HttpResponseRedirect(reverse('flux_view'))
+    def post(self, request, id, *args, **kwargs):
+        ticket_id = id
+        if isinstance(ticket_id, int) is True and Ticket.objects.filter(id=ticket_id).exists():
+            review_form = CreateReviewForm(request.POST)
+            if review_form.is_valid():
+                Review.objects.create(
+                    rating=int(review_form.cleaned_data["rating"]),
+                    headline=review_form.cleaned_data["headline"],
+                    body=review_form.cleaned_data["body"],
+                    ticket_id=ticket_id,
+                    user_id=request.user.id,
+                )
+                messages.add_message(
+                    request,
+                    messages.SUCCESS,
+                    '<div class="alert alert-success text-center col-xl-12 col-md-12 col-sm-10 mt-1" role="alert">'
+                    "<p>Votre critique à été créée avec succès.</p>"
+                    "</div>",
+                )
+                return HttpResponseRedirect(reverse('flux_view'))
+            else:
+                messages.add_message(
+                    request,
+                    messages.ERROR,
+                    '<div class="alert alert-danger text-center col-xl-12 col-md-12 col-sm-10 mt-1" role="alert">'
+                    "<p>Veuillez remplir les champs correctement.</p>"
+                    "</div>",
+                )
+                return HttpResponseRedirect(reverse('create_review_view'))
         else:
             messages.add_message(
                 request,
                 messages.ERROR,
                 '<div class="alert alert-danger text-center col-xl-12 col-md-12 col-sm-10 mt-1" role="alert">'
-                "<p>Veuillez remplir les champs correctement.</p>"
-                "<p>Assurez vous que votre image est à la bonne extension : <b>.jpg, .png</b>.</p>"
+                "<p>Vous essayez d'accèder à un continu qui n'existe pas...</p>"
                 "</div>",
             )
-            return HttpResponseRedirect(reverse('create_review_view'))
+            return HttpResponseRedirect(reverse('flux_view'))
 
 
 
