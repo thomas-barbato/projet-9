@@ -77,7 +77,9 @@ class CreateTicketForm(forms.Form):
     )
     description = forms.CharField(widget=TextInput(attrs={}), required=True)
     image = forms.ImageField(
-        widget=forms.FileInput(attrs={}), validators=[CheckImageExtension().validate], required=True
+        widget=forms.FileInput(attrs={}),
+        validators=[CheckImageExtension().validate],
+        required=True,
     )
 
 

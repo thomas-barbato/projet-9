@@ -10,25 +10,31 @@
         {% with request.get_full_path as path %}
         <ul class="navbar-nav ml-auto order-1">
             <li class="nav-item">
-                {% if "flux" in path %}
-                <a class="nav-link" href="{% url 'flux_view' %}"><b>Flux</b></a>
-                {% else %}
-                <a class="nav-link" href="{% url 'flux_view' %}">Flux</a>
-                {% endif %}
+                <a class="nav-link" href="{% url 'flux_view' %}">
+                    {% if "flux" in path %}
+                    <b>Flux</b>
+                    {% else %}
+                    Flux
+                    {% endif %}
+                </a>
             </li>
             <li class="nav-item">
-                {% if "posts" in path %}
-                <a class="nav-link" href=""><b>Posts</b></a>
-                {% else %}
-                <a class="nav-link" href="">Posts</a>
-                {% endif %}
+                <a class="nav-link" href="{% url 'posts_view' %}">
+                    {% if "posts" in path %}
+                    <b>Posts</b>
+                    {% else %}
+                    Posts
+                    {% endif %}
+                </a>
             </li>
             <li class="nav-item">
-                {% if "abonnements" in path %}
-                <a class="nav-link" href=""><b>Abonnements</b></a>
-                {% else %}
-                <a class="nav-link" href="">Abonnements</a>
-                {% endif %}
+                <a class="nav-link" href="">
+                    {% if "abonnements" in path %}
+                    <b>Abonnements</b>
+                    {% else %}
+                    Abonnements
+                    {% endif %}
+                </a>
             </li>
             <li class="nav-item">
                 <a class="nav-link" href="{% url 'user_logout' %}">Se déconnecter</a>

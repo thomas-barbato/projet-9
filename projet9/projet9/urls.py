@@ -27,7 +27,9 @@ urlpatterns = [
     ),
     path(
         "registration-success",
-        core_views.SignupSuccessView.as_view(template_name="authentication/login.html"),
+        core_views.SignupSuccessView.as_view(
+            template_name="authentication/login.html"
+        ),
         name="registration_success_view",
     ),
     path(
@@ -55,6 +57,23 @@ urlpatterns = [
             template_name="dashboard/create_answer_review.html"
         ),
         name="answer_review_view",
+    ),
+    path(
+        "dashboard/posts/",
+        core_views.DislayPostsView.as_view(
+            template_name="dashboard/posts.html"
+        ),
+        name="posts_view",
+    ),
+    path(
+        "dashboard/posts/delete",
+        core_views.DislayPostsView.delete,
+        name="delete_post",
+    ),
+    path(
+        "dashboard/posts/<int:post_id>/update",
+        core_views.DislayPostsView.update_view,
+        name="update_post_view",
     ),
     path(
         "logout",

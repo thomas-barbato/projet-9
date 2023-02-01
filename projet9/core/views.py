@@ -116,30 +116,42 @@ class FluxView(LoginRequiredMixin, View):
     template_name = "dashboard/flux.html"
 
     def get(self, request, *args, **kwargs):
-        query_review = [result for result in Review.objects.select_related('user', 'ticket','ticket__user_id', 'user__username').values(
-            'headline',
-            'body',
-            'rating',
-            'time_created',
-            'ticket_id',
-            'user_id',
-            'user__username',
-            'ticket__image',
-            'ticket__title',
-            'ticket__user_id__username'
-        ).order_by('-time_created')]
+        query_review = [
+            result
+            for result in Review.objects.select_related(
+                "user", "ticket", "ticket__user_id", "user__username"
+            )
+            .values(
+                "headline",
+                "body",
+                "rating",
+                "time_created",
+                "ticket_id",
+                "user_id",
+                "user__username",
+                "ticket__image",
+                "ticket__title",
+                "ticket__user_id__username",
+            )
+            .order_by("-time_created")
+        ]
 
         review = [dict(item, is_review=True) for item in query_review]
 
-        query_ticket = [result for result in Ticket.objects.select_related('user').values(
-            'id',
-            'title',
-            'description',
-            'image',
-            'user_id',
-            'user__username',
-            'time_created'
-        ).order_by('-time_created')]
+        query_ticket = [
+            result
+            for result in Ticket.objects.select_related("user")
+            .values(
+                "id",
+                "title",
+                "description",
+                "image",
+                "user_id",
+                "user__username",
+                "time_created",
+            )
+            .order_by("-time_created")
+        ]
 
         ticket = [dict(item, is_ticket=True) for item in query_ticket]
 
@@ -149,8 +161,12 @@ class FluxView(LoginRequiredMixin, View):
             if item not in result:
                 result.append(item)
 
-        result = sorted(result, key=lambda d: d['time_created'], reverse=True)
-        return render(request, self.template_name, {'posts': result, 'star_range': range(5)})
+        result = sorted(result, key=lambda d: d["time_created"], reverse=True)
+        return render(
+            request,
+            self.template_name,
+            {"posts": result, "star_range": range(5)},
+        )
 
 
 class CreateTicketView(LoginRequiredMixin, View):
@@ -164,7 +180,10 @@ class CreateTicketView(LoginRequiredMixin, View):
     def post(self, request, *args, **kwargs):
         form = CreateTicketForm(request.POST, request.FILES)
         if form.is_valid():
-            file = HandleUploadedFile(request.FILES["image"], request.FILES["image"].name)
+            file = HandleUploadedFile(
+                file=request.FILES["image"], filename=request.FILES["image"].name
+            )
+            file.upload()
             Ticket.objects.create(
                 title=form.cleaned_data["title"],
                 description=form.cleaned_data["description"],
@@ -178,7 +197,7 @@ class CreateTicketView(LoginRequiredMixin, View):
                 "<p>Votre demande de critique à été créée avec succès.</p>"
                 "</div>",
             )
-            return HttpResponseRedirect(reverse('flux_view'))
+            return HttpResponseRedirect(reverse("flux_view"))
 
         else:
             messages.add_message(
@@ -189,7 +208,7 @@ class CreateTicketView(LoginRequiredMixin, View):
                 "<p>Assurez vous que votre image est à la bonne extension : <b>.jpg, .png</b>.</p>"
                 "</div>",
             )
-            return HttpResponseRedirect(reverse('create_ticket_view'))
+            return HttpResponseRedirect(reverse("create_ticket_view"))
 
 
 class CreateFullReviewView(LoginRequiredMixin, View):
@@ -204,7 +223,10 @@ class CreateFullReviewView(LoginRequiredMixin, View):
         review_form = CreateReviewForm(request.POST)
         ticket_form = CreateTicketForm(request.POST, request.FILES)
         if review_form.is_valid() and ticket_form.is_valid():
-            file = HandleUploadedFile(request.FILES["image"], request.FILES["image"].name)
+            file = HandleUploadedFile(
+                file=request.FILES["image"], filename=request.FILES["image"].name
+            )
+            file.upload()
             Ticket.objects.create(
                 title=ticket_form.cleaned_data["title"],
                 description=ticket_form.cleaned_data["description"],
@@ -231,7 +253,7 @@ class CreateFullReviewView(LoginRequiredMixin, View):
                 "<p>Votre critique à été créée avec succès.</p>"
                 "</div>",
             )
-            return HttpResponseRedirect(reverse('flux_view'))
+            return HttpResponseRedirect(reverse("flux_view"))
         else:
             messages.add_message(
                 request,
@@ -241,19 +263,28 @@ class CreateFullReviewView(LoginRequiredMixin, View):
                 "<p>Assurez vous que votre image est à la bonne extension : <b>.jpg, .png</b>.</p>"
                 "</div>",
             )
-            return HttpResponseRedirect(reverse('create_review_view'))
+            return HttpResponseRedirect(reverse("create_review_view"))
 
 
 class CreateReviewView(LoginRequiredMixin, View):
     login_url = settings.LOGIN_URL
     template_name = "dashboard/create_answer_review.html"
 
-    def get(self, request,id, *args, **kwargs):
+    def get(self, request, id, *args, **kwargs):
         ticket_id = id
-        if isinstance(ticket_id, int) is True and Ticket.objects.filter(id=ticket_id).exists():
-            ticket = [ticket for ticket in Ticket.objects.filter(id=ticket_id).values()]
-            print(ticket)
-            return render(request, self.template_name, {"rating_range": range(6), "ticket": ticket})
+        if (
+            isinstance(ticket_id, int) is True
+            and Ticket.objects.filter(id=ticket_id).exists()
+        ):
+            ticket = [
+                ticket
+                for ticket in Ticket.objects.filter(id=ticket_id).values()
+            ]
+            return render(
+                request,
+                self.template_name,
+                {"rating_range": range(6), "ticket": ticket},
+            )
         else:
             messages.add_message(
                 request,
@@ -262,13 +293,15 @@ class CreateReviewView(LoginRequiredMixin, View):
                 "<p>Vous essayez d'accèder à un continu qui n'existe pas...</p>"
                 "</div>",
             )
-            return HttpResponseRedirect(reverse('flux_view'))
-
+            return HttpResponseRedirect(reverse("flux_view"))
 
     @method_decorator(csrf_protect)
     def post(self, request, id, *args, **kwargs):
         ticket_id = id
-        if isinstance(ticket_id, int) is True and Ticket.objects.filter(id=ticket_id).exists():
+        if (
+            isinstance(ticket_id, int) is True
+            and Ticket.objects.filter(id=ticket_id).exists()
+        ):
             review_form = CreateReviewForm(request.POST)
             if review_form.is_valid():
                 Review.objects.create(
@@ -285,7 +318,7 @@ class CreateReviewView(LoginRequiredMixin, View):
                     "<p>Votre critique à été créée avec succès.</p>"
                     "</div>",
                 )
-                return HttpResponseRedirect(reverse('flux_view'))
+                return HttpResponseRedirect(reverse("flux_view"))
             else:
                 messages.add_message(
                     request,
@@ -294,7 +327,7 @@ class CreateReviewView(LoginRequiredMixin, View):
                     "<p>Veuillez remplir les champs correctement.</p>"
                     "</div>",
                 )
-                return HttpResponseRedirect(reverse('create_review_view'))
+                return HttpResponseRedirect(reverse("create_review_view"))
         else:
             messages.add_message(
                 request,
@@ -303,7 +336,136 @@ class CreateReviewView(LoginRequiredMixin, View):
                 "<p>Vous essayez d'accèder à un continu qui n'existe pas...</p>"
                 "</div>",
             )
-            return HttpResponseRedirect(reverse('flux_view'))
+            return HttpResponseRedirect(reverse("flux_view"))
+
+
+class DislayPostsView(LoginRequiredMixin, View):
+    login_url = settings.LOGIN_URL
+    template_name = "dashboard/posts.html"
+    update_template_name = "dashboard/update_post.html"
+
+    def get(self, request, *args, **kwargs):
+        print(request.user.id)
+        query_review = [
+            result
+            for result in Review.objects.select_related(
+                "user", "ticket", "ticket__user_id", "user__username"
+            ).filter(user_id=request.user.id)
+            .values(
+                "id",
+                "headline",
+                "body",
+                "rating",
+                "time_created",
+                "ticket_id",
+                "user_id",
+                "user__username",
+                "ticket__image",
+                "ticket__title",
+                "ticket__user_id__username",
+            )
+            .order_by("-time_created")
+        ]
+
+        if len(query_review) == 0:
+            messages.add_message(
+                request,
+                messages.ERROR,
+                '<div class="alert alert-danger text-center col-xl-12 col-md-12 col-sm-10 mt-1" role="alert">'
+                "<p>Vous n'avez encore rien publié</p>"
+                "</div>",
+            )
+
+        return render(
+            request,
+            self.template_name,
+            {"posts": query_review, "star_range": range(5)},
+        )
+
+    @method_decorator(csrf_protect)
+    def post(self, request, *args, **kwargs):
+        review_id = int(request.POST.get('post_id'))
+        if Review.objects.filter(user_id=request.user.id, id=review_id).exists():
+            review = Review.objects.filter(user_id=request.user.id, id=int(request.POST.get('post_id')))
+            review.update(
+                headline=request.POST.get('headline'),
+                body=request.POST.get('body'),
+                rating=request.POST.get('rating')
+            )
+            messages.add_message(
+                request,
+                messages.SUCCESS,
+                '<div class="alert alert-success text-center col-xl-12 col-md-12 col-sm-10 mt-1" role="alert">'
+                "<p>Critique modifiée avec succès.</p>"
+                "</div>",
+            )
+            return HttpResponseRedirect(reverse("posts_view"))
+        else:
+            messages.add_message(
+                request,
+                messages.ERROR,
+                '<div class="alert alert-danger text-center col-xl-12 col-md-12 col-sm-10 mt-1" role="alert">'
+                "<p>Vous essayez de modifier à un continu qui n'existe pas...</p>"
+                "</div>",
+            )
+            return HttpResponseRedirect(reverse("posts_view"))
+
+
+    @staticmethod
+    def delete(request):
+        post_id = int(request.POST.get('post_id'))
+        if Review.objects.filter(user_id=request.user.id, id=post_id).exists():
+            review = Review.objects.select_related('ticket').filter(user_id=request.user.id, id=post_id)
+            img_name = review.values("ticket__image")[0]['ticket__image']
+            HandleUploadedFile(
+                filename=img_name
+            ).delete()
+            review.delete()
+            messages.add_message(
+                request,
+                messages.SUCCESS,
+                '<div class="alert alert-success text-center col-xl-12 col-md-12 col-sm-10 mt-1" role="alert">'
+                "<p>Votre poste à correctement été supprimé.</p>"
+                "</div>",
+            )
+            return HttpResponseRedirect(reverse("posts_view"))
+        else:
+            messages.add_message(
+                request,
+                messages.ERROR,
+                '<div class="alert alert-danger text-center col-xl-12 col-md-12 col-sm-10 mt-1" role="alert">'
+                "<p>Vous essayez de supprimer à un continu qui n'existe pas...</p>"
+                "</div>",
+            )
+            return HttpResponseRedirect(reverse("posts_view"))
+
+    @staticmethod
+    def update_view(request, post_id):
+        post_id = post_id
+        query_review = Review.objects.select_related(
+                "user", "ticket", "ticket__user_id", "user__username"
+            ).filter(id=post_id).values(
+                "id",
+                "headline",
+                "body",
+                "rating",
+                "time_created",
+                "ticket_id",
+                "user_id",
+                "user__username",
+                "ticket__image",
+                "ticket__title",
+                "ticket__description",
+                "ticket__user_id__username",
+            ).order_by("-time_created")
+
+
+        return render(
+            request,
+            "dashboard/update_post.html",
+            {"post": query_review, "rating_range": range(6)},
+        )
+
 
 
 

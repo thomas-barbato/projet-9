@@ -74,7 +74,9 @@ LOGOUT_REDIRECT_URL = "core.login_view"
 
 WSGI_APPLICATION = "projet9.wsgi.application"
 ASGI_APPLICATION = "projet9.asgi.application"
-CHANNEL_LAYERS = {"default": {"BACKEND": "channels.layers.InMemoryChannelLayer"}}
+CHANNEL_LAYERS = {
+    "default": {"BACKEND": "channels.layers.InMemoryChannelLayer"}
+}
 
 
 """
@@ -146,7 +148,9 @@ USE_I18N = True
 USE_TZ = True
 
 
-SECRET_KEY = "django-insecure-k1-3qmw*duh-f_uhso9gugv$f6af0n4vq_c1mbc00(3g6i30(l"
+SECRET_KEY = (
+    "django-insecure-k1-3qmw*duh-f_uhso9gugv$f6af0n4vq_c1mbc00(3g6i30(l"
+)
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.1/howto/static-files/
