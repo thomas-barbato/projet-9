@@ -1,0 +1,41 @@
+{% extends "generalist_template.html" %}
+{% load static %}
+{% block content %}
+<div class="container-fluid d-flex justify-content-center">
+    <div class="row col-xl-10 col-md-10 col-sm-10 d-flex justify-content-center mt-5">
+        <div class="row no-gutters follow-policy col-xl-12 col-md-12 col-sm-12 d-flex justify-content-center mt-1"></div>
+        <div class="row col-xl-12 col-md-12 col-sm-12 d-flex justify-content-center mt-1">
+            <h4 class="text-center col-12">Suivre d'autres utilisateurs</h4>
+            <form method="POST" action="" class="input-group col-12">
+                {% csrf_token %}
+              <input type="text" class="form-control form-input-text col-10" placeholder="Nom d'utilisateur" id="id_username" required>
+              <div class="input-group-append">
+                <button class="btn btn-outline-secondary follow-user-button" type="button">Envoyer</button>
+              </div>
+            </form>
+        </div>
+        <div class="row col-xl-12 col-md-12 col-sm-12 d-flex justify-content-center mt-3">
+            <h4 class="text-center col-12">Vos abonnements</h4>
+            {% for user_suscribe in suscribe %}
+            <div class="d-flex flex-column col-12 followed-users d-flex justify-content-center ">
+              <div class="row p-2 col-12 border color-swap"><p class="col-xl-10 col-md-10 col-sm-8">{{ user_suscribe.followed_user_id__username }}</p><button class="btn col-xl-2 col-md-2 col-sm-4">Supprimer</button></div>
+            </div>
+            {% endfor %}
+        </div>
+        <div class="row col-xl-12 col-md-12 col-sm-12 d-flex justify-content-center mt-3">
+            <h4 class="text-center col-12">Abonnés</h4>
+            {% for follow in followed_by %}
+            <div class="d-flex flex-column col-12 suscribed-users">
+              <div class="row p-2 col-12 border color-swap"><p class="col-12">{{ follow.user_id__username }}</p></div>
+            </div>
+            {% endfor %}
+        </div>
+        <div class="mt-3 blank-space"></div>
+    </div>
+</div>
+{% endblock %}
+{% block javascript %}
+<script src="{% static 'js/scripts/suscribe.js' %}" type="text/javascript">
+</script>
+
+{% endblock %}

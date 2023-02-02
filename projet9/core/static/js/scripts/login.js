@@ -4,7 +4,7 @@ $('.login-policy').hide()
 // " " are used to define django values.
 // only work with instruction which don't use keyword like url...
 "{% if messages %}"
-    $('ul.messages').fadeOut(10000);
+    $('ul.messages').fadeOut(5000);
 "{% endif %}"
 
 $('.login-button').on('click', function(){
@@ -26,7 +26,7 @@ $('.login-button').on('click', function(){
                 window.location = flux_view
             }else{
                 if(json.errors){
-                    $('.login-policy').show().fadeOut(10000)
+                    $('.login-policy').show().fadeOut(5000);
                 }
             }
         }

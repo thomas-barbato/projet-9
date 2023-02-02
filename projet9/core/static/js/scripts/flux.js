@@ -1,3 +1,3 @@
 '{% if messages %}'
-    $('.messages').fadeOut(10000)
+    $('.messages').fadeOut(5000);
 '{% endif %}'

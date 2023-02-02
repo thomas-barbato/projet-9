@@ -28,10 +28,10 @@
                     $.each(json.errors, function( index, value ) {
                       if(index === "password" || index === "password2" || index === "__all__"){
                         password_elem.html(value);
-                        password_elem.show().fadeOut(10000);
+                        password_elem.show().fadeOut(5000);
                       }else if(index === "username"){
                         username_elem.html(value);
-                        username_elem.show().fadeOut(10000);
+                        username_elem.show().fadeOut(5000);
                       }
                     });
                 }

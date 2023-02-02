@@ -467,6 +467,65 @@ class DislayPostsView(LoginRequiredMixin, View):
         )
 
 
+class DisplaySuscribeView(LoginRequiredMixin, View):
+    template_name: str = "dashboard/suscribe.html"
+
+    @method_decorator(csrf_exempt)
+    def get(self, request, *args, **kwargs):
+        user_follow_list = UserFollows.objects.filter(user_id=request.user.id).select_related('user', 'user__id', 'user__username').values('followed_user_id__username')
+        followed_by_list = UserFollows.objects.filter(followed_user_id=request.user.id).select_related('user', 'user__id', 'user__username').values('user_id__username')
+        return render(request, self.template_name, {"suscribe": user_follow_list, "followed_by": followed_by_list})
+
+    @method_decorator(csrf_protect)
+    def post(self, request, *args, **kwargs):
+        username: str = request.POST.get('username')
+        response: dict = {}
+        if username:
+            followed_user = User.objects.filter(username=username)
+            if followed_user.exists():
+                follower_id = followed_user.values('id', 'username')[0]['id']
+                if not UserFollows.objects.filter(user_id=request.user.id, followed_user=follower_id).exists():
+                    UserFollows.objects.create(
+                        user_id=request.user.id,
+                        followed_user=User(id=follower_id)
+                    )
+                    response = {
+                        "status": 1,
+                        "error":
+                            '<div class="alert alert-success text-center col-xl-12 col-md-12 col-sm-10 mt-1" role="alert">'
+                            f"<p>Vous suivez maintenant {username}.</p>"
+                            "</div>",
+                        "username": f"{username}"
+                    }
+                else:
+                    response = {
+                        "status": 0,
+                        "error":
+                            '<div class="alert alert-danger text-center col-xl-12 col-md-12 col-sm-10 mt-1" role="alert">'
+                            "<p>Vous suivez déjà cet utilisateur.</p>"
+                            "</div>"
+                    }
+            else:
+                response = {
+                    "status": 0,
+                    "error":
+                        '<div class="alert alert-danger text-center col-xl-12 col-md-12 col-sm-10 mt-1" role="alert">'
+                        "<p>l'utilisateur que vous recherchez n'existe pas.</p>"
+                        "</div>"
+                }
+
+        else:
+            response = {
+                "status": 0,
+                "error":
+                '<div class="alert alert-danger text-center col-xl-12 col-md-12 col-sm-10 mt-1" role="alert">'
+                "<p>Vous devez entrer un nom d'utilisateur...</p>"
+                "</div>"
+            }
+        return JsonResponse(response)
+
+
+
 
 
 class UserLogout(RedirectView):

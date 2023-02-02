@@ -90,3 +90,17 @@ li {
 .star-color{
     color:orange
 }
+
+.color-swap{
+    text-shadow: 1px 1px 2px black;
+    border:3px black solid;
+}
+
+.color-swap-1{
+    background-color:#2e343a;
+    color:whitesmoke;
+}
+.color-swap-2{
+    background-color:#90969b;
+    color:whitesmoke;
+}

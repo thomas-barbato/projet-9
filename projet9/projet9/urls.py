@@ -76,6 +76,13 @@ urlpatterns = [
         name="update_post_view",
     ),
     path(
+        "dashboard/abonnements/",
+        core_views.DisplaySuscribeView.as_view(
+            template_name="dashboard/suscribe.html"
+        ),
+        name="suscribe_view",
+    ),
+    path(
         "logout",
         core_views.UserLogout.as_view(),
         name="user_logout",
