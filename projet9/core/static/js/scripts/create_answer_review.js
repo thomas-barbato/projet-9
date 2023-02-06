@@ -9,7 +9,7 @@
     })
 
      let answer_review_array = document.URL.split('/')
-     let answer_review_id = answer_review_array[url_array.length-1];
+     let answer_review_id = answer_review_array[answer_review_array.length-1];
      let answer_review_url = "/dashboard/flux/create_answer_review/" + answer_review_id + "?"
 
     $('.answer-ticket-button').on('submit', function(e){

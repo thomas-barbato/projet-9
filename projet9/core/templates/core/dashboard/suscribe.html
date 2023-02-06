@@ -17,9 +17,17 @@
         <div class="row col-xl-12 col-md-12 col-sm-12 d-flex justify-content-center mt-3">
             <h4 class="text-center col-12">Vos abonnements</h4>
             {% for user_suscribe in suscribe %}
-            <div class="d-flex flex-column col-12 followed-users d-flex justify-content-center ">
-              <div class="row p-2 col-12 border color-swap"><p class="col-xl-10 col-md-10 col-sm-8">{{ user_suscribe.followed_user_id__username }}</p><button class="btn col-xl-2 col-md-2 col-sm-4">Supprimer</button></div>
-            </div>
+            <form method="POST" action="" class="" name="unfollow">
+                {% csrf_token %}
+                <div class="d-flex flex-column col-12 followed-users d-flex justify-content-center ">
+                  <div class="row p-2 col-12 border color-swap">
+                      <p class="col-xl-10 col-md-10 col-sm-8 followed-user-username">{{ user_suscribe.followed_user_id__username }}</p>
+                      <button type="submit" class="btn col-xl-2 col-md-2 col-sm-4 unfollow-user-button">
+                          Supprimer
+                      </button>
+                  </div>
+                </div>
+            </form>
             {% endfor %}
         </div>
         <div class="row col-xl-12 col-md-12 col-sm-12 d-flex justify-content-center mt-3">

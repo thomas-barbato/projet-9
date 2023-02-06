@@ -30,7 +30,7 @@
                        {% endif %}
                    </small>
                     <small class="d-flex justify-content-end col-xl-4 col-md-4 col-sm-12">
-                        {{ post.time_created }}
+                        {{ post.time_created|date }}
                     </small>
                 </div>
                 <div class="row no-gutters col-12 d-flex justify-content-start">
@@ -75,7 +75,7 @@
                        {% endif %}
                    </small>
                     <small class="d-flex justify-content-end col-4">
-                        {{ post.time_created }}
+                        {{ post.time_created|date }}
                     </small>
                 </div>
                 <div class="row no-gutters col-12 d-flex justify-content-start">

@@ -2,6 +2,9 @@ import datetime
 from django.db import models
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.contrib.auth.models import User
+from django.urls import reverse
+
+
 
 import os
 
@@ -14,6 +17,9 @@ class Ticket(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     image = models.ImageField(null=True, blank=True)
     time_created = models.DateTimeField("Created Time", auto_now_add=True)
+
+    def get_absolute_url(self):
+        return reverse('create_ticket_view')
 
 
 class UserFollows(models.Model):
@@ -40,3 +46,6 @@ class Review(models.Model):
     headline = models.CharField(max_length=128)
     body = models.TextField(max_length=8192, blank=True)
     time_created = models.DateTimeField("Created Time", auto_now_add=True)
+
+    def get_absolute_url(self):
+        return reverse('posts_view')

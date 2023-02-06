@@ -1,9 +1,12 @@
 from channels.generic.websocket import AsyncWebsocketConsumer
+from django.contrib.messages.views import SuccessMessageMixin
 from django.shortcuts import render, redirect, HttpResponseRedirect
 from django.contrib.auth import authenticate, login, logout
 from django.views import View
 from django.contrib.sessions.models import Session
-from django.views.generic import RedirectView
+from django.views.generic import RedirectView, UpdateView, DeleteView, DetailView, ListView, TemplateView, CreateView, FormView
+from django.views.generic.edit import FormMixin
+
 from .forms import *
 from .models import *
 from django.views.decorators.csrf import csrf_protect, csrf_exempt
@@ -11,15 +14,42 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.conf import settings
 from django.utils.decorators import method_decorator
 from django.http import HttpResponseRedirect, JsonResponse
-from django.urls import reverse
+from django.urls import reverse, reverse_lazy
 import datetime
 import json
 from .classes.files import HandleUploadedFile
 from django.contrib import messages
 from django.forms.models import model_to_dict
+from django.http import Http404
 
 
-class CreateUserView(View):
+class JsonableResponseMixin:
+    """
+    Mixin to add JSON support to a form.
+    Must be used with an object-based FormView (e.g. CreateView)
+    """
+    def form_invalid(self, form):
+        response = super().form_invalid(form)
+        if self.request.accepts('text/html'):
+            return response
+        else:
+            return JsonResponse(form.errors, status=400)
+
+    def form_valid(self, form):
+        # We make sure to call the parent's form_valid() method because
+        # it might do some processing (in the case of CreateView, it will
+        # call form.save() for example).
+        response = super().form_valid(form)
+        if self.request.accepts('text/html'):
+            return response
+        else:
+            data = {
+                'pk': self.object.pk,
+            }
+            return JsonResponse(data)
+
+
+class CreateUserView(CreateView):
     template_name: str = "authentication/create_user.html"
 
     @method_decorator(csrf_exempt)
@@ -62,16 +92,13 @@ class CreateUserView(View):
             return JsonResponse(response)
 
 
-class SignupSuccessView(View):
-    login_url = settings.LOGIN_URL
+class SignupSuccessView(RedirectView):
     template_name = "dashboard/flux.html"
 
-    def get(self, request, *args, **kwargs):
-        return render(
-            request,
-            self.template_name,
-            {"signin_form": SigninForm, "user_creation_success": "true"},
-        )
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['signin_form'] = SigninForm
+        return context
 
 
 class LoginView(View):
@@ -111,11 +138,12 @@ class LoginView(View):
             return JsonResponse(response)
 
 
-class FluxView(LoginRequiredMixin, View):
+class FluxView(LoginRequiredMixin, SuccessMessageMixin, TemplateView):
     login_url = settings.LOGIN_URL
-    template_name = "dashboard/flux.html"
+    template_name = "dashboard/posts.html"
 
-    def get(self, request, *args, **kwargs):
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
         query_review = [
             result
             for result in Review.objects.select_related(
@@ -162,23 +190,22 @@ class FluxView(LoginRequiredMixin, View):
                 result.append(item)
 
         result = sorted(result, key=lambda d: d["time_created"], reverse=True)
-        return render(
-            request,
-            self.template_name,
-            {"posts": result, "star_range": range(5)},
-        )
+        context['posts'] = result
+        return context
 
-
-class CreateTicketView(LoginRequiredMixin, View):
+class CreateTicketView(LoginRequiredMixin, JsonableResponseMixin, CreateView):
     login_url = settings.LOGIN_URL
     template_name = "dashboard/create_ticket.html"
+    model = Ticket
+    fields = ["title", "description", "image"]
+    success_url = reverse_lazy('flux_view')
+    success_message = (
+                '<div class="alert alert-success text-center col-xl-12 col-md-12 col-sm-10 mt-1" role="alert">'
+                "<p>Votre demande de critique à été créée avec succès.</p>"
+                "</div>")
 
-    def get(self, request, *args, **kwargs):
-        return render(request, self.template_name)
-
-    @method_decorator(csrf_protect)
     def post(self, request, *args, **kwargs):
-        form = CreateTicketForm(request.POST, request.FILES)
+        form = self.get_form()
         if form.is_valid():
             file = HandleUploadedFile(
                 file=request.FILES["image"], filename=request.FILES["image"].name
@@ -204,11 +231,46 @@ class CreateTicketView(LoginRequiredMixin, View):
                 request,
                 messages.ERROR,
                 '<div class="alert alert-danger text-center col-xl-12 col-md-12 col-sm-10 mt-1" role="alert">'
-                "<p>Veuillez remplir les champs correctement.</p>"
+                "<p>Veuillez remplir <b>tous</b> les champs correctement.</p>"
                 "<p>Assurez vous que votre image est à la bonne extension : <b>.jpg, .png</b>.</p>"
                 "</div>",
             )
             return HttpResponseRedirect(reverse("create_ticket_view"))
+
+"""
+    def post(self, request, *args, **kwargs):
+        form = self.get_form()
+        if form.is_valid():
+            file = HandleUploadedFile(
+                file=request.FILES["image"], filename=request.FILES["image"].name
+            )
+            file.upload()
+            Ticket.objects.create(
+                title=form.cleaned_data["title"],
+                description=form.cleaned_data["description"],
+                user_id=request.user.id,
+                image=file.get_filename(),
+            )
+            messages.add_message(
+                request,
+                messages.SUCCESS,
+                '<div class="alert alert-success text-center col-xl-12 col-md-12 col-sm-10 mt-1" role="alert">'
+                "<p>Votre demande de critique à été créée avec succès.</p>"
+                "</div>",
+            )
+            return HttpResponseRedirect(reverse("flux_view"))
+
+        else:
+            messages.add_message(
+                request,
+                messages.ERROR,
+                '<div class="alert alert-danger text-center col-xl-12 col-md-12 col-sm-10 mt-1" role="alert">'
+                "<p>Veuillez remplir <b>tous</b> les champs correctement.</p>"
+                "<p>Assurez vous que votre image est à la bonne extension : <b>.jpg, .png</b>.</p>"
+                "</div>",
+            )
+            return HttpResponseRedirect(reverse("create_ticket_view"))
+            """
 
 
 class CreateFullReviewView(LoginRequiredMixin, View):
@@ -278,8 +340,18 @@ class CreateReviewView(LoginRequiredMixin, View):
         ):
             ticket = [
                 ticket
-                for ticket in Ticket.objects.filter(id=ticket_id).values()
+                for ticket in Ticket.objects.select_related(
+                "user", "ticket", "ticket__user_id__username", "user__username", "user_id__username").filter(id=ticket_id).values(
+                    "id",
+                    "title",
+                    "description",
+                    "image",
+                    "time_created",
+                    "user_id",
+                    "user_id__username"
+                )
             ]
+            print(ticket)
             return render(
                 request,
                 self.template_name,
@@ -345,7 +417,6 @@ class DislayPostsView(LoginRequiredMixin, View):
     update_template_name = "dashboard/update_post.html"
 
     def get(self, request, *args, **kwargs):
-        print(request.user.id)
         query_review = [
             result
             for result in Review.objects.select_related(
@@ -370,8 +441,8 @@ class DislayPostsView(LoginRequiredMixin, View):
         if len(query_review) == 0:
             messages.add_message(
                 request,
-                messages.ERROR,
-                '<div class="alert alert-danger text-center col-xl-12 col-md-12 col-sm-10 mt-1" role="alert">'
+                messages.INFO,
+                '<div class="alert alert-info text-center col-xl-12 col-md-12 col-sm-10 mt-1" role="alert">'
                 "<p>Vous n'avez encore rien publié</p>"
                 "</div>",
             )
@@ -405,7 +476,7 @@ class DislayPostsView(LoginRequiredMixin, View):
                 request,
                 messages.ERROR,
                 '<div class="alert alert-danger text-center col-xl-12 col-md-12 col-sm-10 mt-1" role="alert">'
-                "<p>Vous essayez de modifier à un continu qui n'existe pas...</p>"
+                "<p>Vous essayez de modifier un continu qui n'existe pas...</p>"
                 "</div>",
             )
             return HttpResponseRedirect(reverse("posts_view"))
@@ -439,32 +510,32 @@ class DislayPostsView(LoginRequiredMixin, View):
             )
             return HttpResponseRedirect(reverse("posts_view"))
 
-    @staticmethod
-    def update_view(request, post_id):
-        post_id = post_id
-        query_review = Review.objects.select_related(
-                "user", "ticket", "ticket__user_id", "user__username"
-            ).filter(id=post_id).values(
-                "id",
-                "headline",
-                "body",
-                "rating",
-                "time_created",
-                "ticket_id",
-                "user_id",
-                "user__username",
-                "ticket__image",
-                "ticket__title",
-                "ticket__description",
-                "ticket__user_id__username",
-            ).order_by("-time_created")
+
+class UpdatePost(LoginRequiredMixin, SuccessMessageMixin, UpdateView):
+    model = Review
+    fields = [
+            "headline",
+            "body",
+            "rating"]
+    success_message = (
+                '<div class="alert alert-success text-center col-xl-12 col-md-12 col-sm-10 mt-1" role="alert">'
+                "<p>Critique modifiée avec succès.</p>"
+                "</div>")
 
 
-        return render(
-            request,
-            "dashboard/update_post.html",
-            {"post": query_review, "rating_range": range(6)},
-        )
+class DeletePost(LoginRequiredMixin, SuccessMessageMixin, DeleteView):
+    model = Review
+    success_url = reverse_lazy('posts_view')
+    success_message = (
+                '<div class="alert alert-success text-center col-xl-12 col-md-12 col-sm-10 mt-1" role="alert">'
+                "<p>Critique modifiée avec succès.</p>"
+                "</div>")
+
+    def delete(self, request, *args, **kwargs):
+        data_to_return = super(DeletePost, self).delete(request, *args, **kwargs)
+        messages.success(self.request, self.success_message)
+        return data_to_return
+
 
 
 class DisplaySuscribeView(LoginRequiredMixin, View):
@@ -523,6 +594,13 @@ class DisplaySuscribeView(LoginRequiredMixin, View):
                 "</div>"
             }
         return JsonResponse(response)
+
+    @method_decorator(csrf_protect)
+    def unfollow(self, request, *args, **kwargs):
+        print(request.POST)
+
+
+
 
 
 

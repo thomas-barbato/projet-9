@@ -23,7 +23,7 @@
                    {% endif %}
                </small>
                 <small class="d-flex justify-content-end col-xl-4 col-md-4 col-sm-12">
-                    {{ post.time_created }}
+                    {{ post.time_created|date }}
                 </small>
             </div>
             <div class="row no-gutters col-12 d-flex justify-content-start">
@@ -57,14 +57,13 @@
                 </div>
             </div>
             <div class="row col-12 d-flex justify-content-end mt-3">
-                <form method="POST" action="{% url 'update_post_view' post_id=post.id %}" class="btn-space col-xl-4 col-md-5 col-sm-10">
+                <form method="POST" action="{% url 'update_post_view' pk=post.id %}" class="btn-space col-xl-4 col-md-5 col-sm-10">
                     {% csrf_token %}
-                    <input type="hidden" value="{{ post.id }}" name="post_id">
+                    <input type="hidden" value="{{ post.id }}" name="pk">
                     <button type="submit" class="btn btn-secondary col-12 mb-1">Modifier</button>
                 </form>
-                <form method="POST" action="{% url 'delete_post' %}" class="btn-space col-xl-4 col-md-5 col-sm-10">
+                <form method="POST" action="{% url 'delete_post' pk=post.id %}" class="btn-space col-xl-4 col-md-5 col-sm-10">
                     {% csrf_token %}
-                    <input type="hidden" value="{{ post.id }}" name="post_id">
                     <button type="submit" class="btn btn-secondary col-12 mb-3">Supprimer</button>
                 </form>
             </div>

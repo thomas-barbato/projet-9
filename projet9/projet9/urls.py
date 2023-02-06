@@ -66,21 +66,28 @@ urlpatterns = [
         name="posts_view",
     ),
     path(
-        "dashboard/posts/delete",
-        core_views.DislayPostsView.delete,
+        "dashboard/posts/delete/<int:pk>",
+        core_views.DeletePost.as_view(
+            template_name="dashboard/posts.html"
+        ),
         name="delete_post",
     ),
     path(
-        "dashboard/posts/<int:post_id>/update",
-        core_views.DislayPostsView.update_view,
+        "dashboard/posts/<int:pk>",
+        core_views.UpdatePost.as_view(template_name="dashboard/update_post.html"),
         name="update_post_view",
     ),
     path(
-        "dashboard/abonnements/",
+        "dashboard/suscribe/",
         core_views.DisplaySuscribeView.as_view(
             template_name="dashboard/suscribe.html"
         ),
         name="suscribe_view",
+    ),
+    path(
+        "dashboard/suscribe/unfollow",
+        core_views.DisplaySuscribeView.unfollow,
+        name="unfollow_user",
     ),
     path(
         "logout",
