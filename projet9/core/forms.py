@@ -99,3 +99,11 @@ class CreateReviewForm(forms.Form):
         required=True,
         label="",
     )
+
+
+class FollowUserForm(forms.Form):
+    username = forms.CharField(
+        widget=TextInput(attrs={}),
+        required=True,
+        label="",
+    )

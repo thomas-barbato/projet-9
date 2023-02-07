@@ -26,13 +26,6 @@ urlpatterns = [
         name="registration_view",
     ),
     path(
-        "registration-success",
-        core_views.SignupSuccessView.as_view(
-            template_name="authentication/login.html"
-        ),
-        name="registration_success_view",
-    ),
-    path(
         "dashboard/flux",
         core_views.FluxView.as_view(template_name="dashboard/flux.html"),
         name="flux_view",
@@ -83,11 +76,6 @@ urlpatterns = [
             template_name="dashboard/suscribe.html"
         ),
         name="suscribe_view",
-    ),
-    path(
-        "dashboard/suscribe/unfollow",
-        core_views.DisplaySuscribeView.unfollow,
-        name="unfollow_user",
     ),
     path(
         "logout",

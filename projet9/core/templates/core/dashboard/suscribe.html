@@ -3,14 +3,23 @@
 {% block content %}
 <div class="container-fluid d-flex justify-content-center">
     <div class="row col-xl-10 col-md-10 col-sm-10 d-flex justify-content-center mt-5">
-        <div class="row no-gutters follow-policy col-xl-12 col-md-12 col-sm-12 d-flex justify-content-center mt-1"></div>
+        {% if messages %}
+        <ul class="messages">
+            {% for message in messages %}
+            <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>
+                {% if message.level == DEFAULT_MESSAGE_LEVELS.ERROR %}Important: {% endif %}
+                {{ message|safe }}
+            </li>
+            {% endfor %}
+        </ul>
+        {% endif %}
         <div class="row col-xl-12 col-md-12 col-sm-12 d-flex justify-content-center mt-1">
             <h4 class="text-center col-12">Suivre d'autres utilisateurs</h4>
-            <form method="POST" action="" class="input-group col-12">
+            <form method="POST" action="{% url 'suscribe_view' %}" class="input-group col-12" name="follow-user">
                 {% csrf_token %}
-              <input type="text" class="form-control form-input-text col-10" placeholder="Nom d'utilisateur" id="id_username" required>
+              <input type="text" class="form-control form-input-text col-10" placeholder="Nom d'utilisateur" id="id_username" name="id_username" required>
               <div class="input-group-append">
-                <button class="btn btn-outline-secondary follow-user-button" type="button">Envoyer</button>
+                <input type="submit" class="btn btn-outline-secondary follow-user-button" value="Envoyer"></input>
               </div>
             </form>
         </div>

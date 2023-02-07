@@ -37,7 +37,7 @@
                     <p class="d-flex justify-content-start order-0 col-xl-12 col-sm-12 align-items-center">
                         <label for="rating">{{ post.headline}} - </label>
                         <span class="col-xl-6 col-md-6 col-sm-12" id="rating">
-                        {% for i in star_range %}
+                        {% for i in rating_range %}
                             {% if i < post.rating %}
                             <i class="fas fa-star star-color"></i>
                             {% else %}

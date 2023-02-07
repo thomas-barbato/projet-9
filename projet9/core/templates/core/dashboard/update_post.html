@@ -15,7 +15,6 @@
         {% endfor %}
     </ul>
     {% endif %}
-
     <div class="row no-gutters mt-1 d-flex justify-content-center">
         <form action="{% url 'update_post_view' pk=form.instance.id %}" enctype="multipart/form-data" method="POST">
             <div class="review-form col-8 mx-auto">
@@ -53,14 +52,14 @@
                 <div class="row no-gutters mt-2 col-12 mx-auto">
                     <label for="id_rating" class="justify-content-start"><h5><b>Note</b></h5></label>
                     <div class="col-xl-12 col-md-12 col-sm-10 d-flex justify-content-center">
-                        {% for i in "012345"|make_list %}
+                        {% for i in rating_range %}
                         <label class="radio-inline col-2">
-                            {% if forloop.counter0 == object.rating %}
-                            <input type="radio" class="review-rating" id="id_rating" name="rating" value="{{ forloop.counter0 }}" checked>
+                            {% if i == object.rating %}
+                            <input type="radio" class="review-rating" id="id_rating" name="rating" value="{{ i }}" checked>
                             {% else %}
-                            <input type="radio" class="review-rating" id="id_rating" name="rating" value="{{ forloop.counter0 }}">
+                            <input type="radio" class="review-rating" id="id_rating" name="rating" value="{{ i }}">
                             {% endif %}
-                            - {{ forloop.counter0 }}
+                            - {{ i }}
                         </label>
                         {% endfor %}
                     </div>
@@ -68,7 +67,7 @@
                 <div class="row no-gutters mt-3 col-12 d-flex mx-auto">
                     <div class="col-xl-12 col-md-12 col-sm-10">
                         <label for="id_body" class="justify-content-start"><h5><b>Description</b></h5></label>
-                        <textarea name="body" class="form-control" id="id_body" spellcheck="false" value="{{ object.body }}" required>
+                        <textarea name="body" class="form-control" id="id_body" spellcheck="false" value="{{ body_content}}" required>
                         </textarea>
                     </div>
                 </div>
@@ -95,10 +94,12 @@
             customConfig : 'config_custom.js',
             height: '20vh',
         })
+
+
         "{% autoescape off %}"
-        body_editor.setData("{{ object.body }}")
-        body_editor.setData(text_data);
+        let data = `{{ body_content|safe }}`;
+        body_editor.setData(data);
         "{% endautoescape %}"
-    })
+    });
 </script>
 {% endblock %}
