@@ -10,10 +10,9 @@ from ..models import Ticket
 
 class CheckPasswordPolicy:
     """docstring"""
+
     def __init__(self):
-        self.password_pattern = (
-            "^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[#?!@$%^&*-]).{8,}$"
-        )
+        self.password_pattern = "^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[#?!@$%^&*-]).{8,}$"
 
     def validate(self, password):
         """
@@ -58,6 +57,7 @@ class CheckPasswordPolicy:
 
 class CheckUsernameAlreadyUsed:
     """docstring"""
+
     def __init__(self):
         self.table = User
 
@@ -94,6 +94,7 @@ class CheckUsernameAlreadyUsed:
 
 class CheckImageExtension:
     """docstring"""
+
     def __init__(self):
         self.table = Ticket
 

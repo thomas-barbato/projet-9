@@ -38,6 +38,18 @@ urlpatterns = [
         name="create_ticket_view",
     ),
     path(
+        "dashboard/ticket/<int:pk>",
+        core_views.UpdateTicket.as_view(
+            template_name="dashboard/update_ticket.html"
+        ),
+        name="update_ticket_view",
+    ),
+    path(
+        "dashboard/ticket/delete/<int:pk>",
+        core_views.DeleteTicket.as_view(template_name="dashboard/posts.html"),
+        name="delete_ticket",
+    ),
+    path(
         "dashboard/create_review",
         core_views.CreateFullReviewView.as_view(
             template_name="dashboard/create_review.html"

@@ -83,9 +83,7 @@ class CreateUserView(JsonableResponseMixin, FormView):
                     date_joined=datetime.datetime.now(),
                 ).save()
                 response = {"status": 1}
-                messages.add_message(
-                    self.request, messages.SUCCESS, self.success_message
-                )
+                messages.add_message(self.request, messages.SUCCESS, self.success_message)
                 return JsonResponse(response, status=200)
         return response
 
@@ -141,9 +139,7 @@ class FluxView(LoginRequiredMixin, SuccessMessageMixin, TemplateView):
         """docstring"""
         context = super().get_context_data(**kwargs)
         query_review = list(
-            Review.objects.select_related(
-                "user", "ticket", "ticket__user_id", "user__username"
-            )
+            Review.objects.select_related("user", "ticket", "ticket__user_id", "user__username")
             .values(
                 "headline",
                 "body",
@@ -363,10 +359,7 @@ class CreateReviewView(LoginRequiredMixin, FormView):
     def form_valid(self, form):
         """docstring"""
         ticket_id = self.kwargs["id"]
-        if (
-            isinstance(ticket_id, int) is True
-            and Ticket.objects.filter(id=ticket_id).exists()
-        ):
+        if isinstance(ticket_id, int) is True and Ticket.objects.filter(id=ticket_id).exists():
             Review.objects.create(
                 rating=int(self.request.POST.get("rating")),
                 headline=self.request.POST.get("headline"),
@@ -412,9 +405,7 @@ class DislayPostsView(LoginRequiredMixin, TemplateView):
         """docstring"""
         context = super().get_context_data(**kwargs)
         query_review = list(
-            Review.objects.select_related(
-                "user", "ticket", "ticket__user_id", "user__username"
-            )
+            Review.objects.select_related("user", "ticket", "ticket__user_id", "user__username")
             .filter(user_id=self.request.user.id)
             .values(
                 "id",
@@ -432,6 +423,30 @@ class DislayPostsView(LoginRequiredMixin, TemplateView):
             .order_by("-time_created")
         )
 
+        query_ticket = list(
+            Ticket.objects.select_related("user")
+            .filter(user_id=self.request.user.id)
+            .values(
+                "id",
+                "title",
+                "description",
+                "image",
+                "user_id",
+                "user__username",
+                "time_created",
+            )
+            .order_by("-time_created")
+        )
+
+        ticket = [dict(item, is_ticket=True) for item in query_ticket]
+
+        result = []
+        ticket.extend(query_review)
+        for item in ticket:
+            if item not in result:
+                result.append(item)
+
+        result = sorted(result, key=lambda d: d["time_created"], reverse=True)
         if len(query_review) == 0:
             messages.add_message(
                 self.request,
@@ -439,7 +454,7 @@ class DislayPostsView(LoginRequiredMixin, TemplateView):
                 self.empty_content_message,
             )
         else:
-            context["posts"] = query_review
+            context["posts"] = result
             context["rating_range"] = range(5)
         return context
 
@@ -460,10 +475,56 @@ class UpdatePost(LoginRequiredMixin, SuccessMessageMixin, UpdateView):
         """docstring"""
         context = super().get_context_data(**kwargs)
         context["rating_range"] = range(5)
-        context["body_content"] = Review.objects.filter(
-            id=self.kwargs["pk"], user_id=self.request.user.id
-        ).values()[0]["body"]
+        context["body_content"] = Review.objects.filter(id=self.kwargs["pk"], user_id=self.request.user.id).values()[
+            0
+        ]["body"]
         return context
+
+
+class UpdateTicket(LoginRequiredMixin, SuccessMessageMixin, UpdateView):
+    """docstring"""
+
+    login_url = settings.LOGIN_URL
+    model = Ticket
+    fields = ["title", "description", "image"]
+    success_message = (
+        '<div class="alert alert-success text-center col-xl-12 col-md-12 col-sm-10 mt-1" role="alert">'
+        "<p>Ticket modifié avec succès.</p>"
+        "</div>"
+    )
+
+    def get_context_data(self, **kwargs):
+        """docstring"""
+        context = super().get_context_data(**kwargs)
+        context["description_content"] = Ticket.objects.filter(id=self.kwargs["pk"]).values()[
+            0
+        ]["description"]
+        return context
+
+    def form_valid(self, form):
+        """docstring"""
+        ticket_id = self.kwargs["pk"]
+        if isinstance(ticket_id, int) is True and Ticket.objects.filter(id=ticket_id).exists():
+
+            file = HandleUploadedFile(
+                file=self.request.FILES["image"],
+                filename=self.request.FILES["image"].name,
+            )
+            file.upload()
+            ticket = Ticket.objects.get(id=ticket_id)
+            HandleUploadedFile(filename=ticket.image).delete()
+            ticket.title = form.cleaned_data.get("title")
+            ticket.description = form.cleaned_data.get("description")
+            ticket.user_id = self.request.user.id
+            ticket.image = file.get_filename()
+            ticket.save()
+            messages.add_message(
+                self.request,
+                messages.SUCCESS,
+                self.success_message
+            )
+        return HttpResponseRedirect(reverse("posts_view"))
+
 
 
 class DeletePost(LoginRequiredMixin, SuccessMessageMixin, DeleteView):
@@ -482,6 +543,26 @@ class DeletePost(LoginRequiredMixin, SuccessMessageMixin, DeleteView):
         data_to_return = super().delete(request, *args, **kwargs)
         messages.success(self.request, self.success_message)
         return data_to_return
+
+
+
+class DeleteTicket(LoginRequiredMixin, SuccessMessageMixin, DeleteView):
+    """docstring"""
+
+    model = Ticket
+    success_url = reverse_lazy("posts_view")
+    success_message = (
+        '<div class="alert alert-success text-center col-xl-12 col-md-12 col-sm-10 mt-1" role="alert">'
+        "<p>Ticket supprimé avec succès.</p>"
+        "</div>"
+    )
+
+    def delete(self, request, *args, **kwargs):
+        """docstring"""
+        data_to_return = super().delete(request, *args, **kwargs)
+        messages.success(self.request, self.success_message)
+        return data_to_return
+
 
 
 class DisplaySuscribeView(LoginRequiredMixin, TemplateView):
@@ -516,9 +597,7 @@ class DisplaySuscribeView(LoginRequiredMixin, TemplateView):
         followed_user = User.objects.filter(username=username)
         if followed_user.exists():
             follower_id = followed_user.values("id", "username")[0]["id"]
-            if not UserFollows.objects.filter(
-                user_id=self.request.user.id, followed_user=follower_id
-            ).exists():
+            if not UserFollows.objects.filter(user_id=self.request.user.id, followed_user=follower_id).exists():
                 UserFollows.objects.create(
                     user_id=self.request.user.id,
                     followed_user=User(id=follower_id),

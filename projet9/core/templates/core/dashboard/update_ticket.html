@@ -1,0 +1,97 @@
+{% extends "generalist_template.html" %}
+{% load static %}
+{% block content %}
+<div class="container-fluid">
+    <div class="row no-gutters mt-2">
+        <h3 class="text-center">Modifier un ticket</h3>
+    </div>
+    {% if messages %}
+    <ul class="messages">
+        {% for message in messages %}
+        <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>
+            {% if message.level == DEFAULT_MESSAGE_LEVELS.ERROR %}Important: {% endif %}
+            {{ message|safe }}
+        </li>
+        {% endfor %}
+    </ul>
+    {% endif %}
+    <form action="" enctype="multipart/form-data" method="POST">
+        <div class="col-8 mx-auto">
+            {% csrf_token %}
+            <div class="row no-gutters mt-3 col-12 d-flex justify-content-center">
+                <div class="col-xl-6 col-md-6 col-sm-10">
+                    <label for="id_title" class="justify-content-start"><h5><b>Titre</b></h5></label>
+                    <input type="text" class="form-control" id="id_title" name="title" value="{{ object.title }}" required/>
+                </div>
+            </div>
+            <div class="row no-gutters mt-3 col-12 d-flex justify-content-center">
+                <div class="col-xl-6 col-md-6 col-sm-10">
+                    <label for="id_description" class="justify-content-start"><h5><b>Description</b></h5></label>
+                    <textarea name="description" class="form-control"  id="id_description" spellcheck="false" required></textarea>
+                </div>
+            </div>
+            <div class="row no-gutters mt-3 col-12 d-flex justify-content-center">
+                <div class="d-flex justify-content-center col-6 mt-1 mb-1">
+                    <img src="{% get_media_prefix %}{{ object.image }}" id="image-preview" class="img-size img-thumbnail"/>
+                </div>
+            </div>
+            <div class="row no-gutters mt-3 col-12 d-flex justify-content-center">
+                <div class="col-xl-6 col-md-6 col-sm-10">
+                    <label for="id_image" class="justify-content-start"><h5><b>Image</b></h5></label>
+                    <button class="btn btn-secondary fake-input-file">Télécharger fichier</button>
+                    <input type="file" id="id_image" class="hidden-input-file" name="image" accept=".jpg, .png" required />
+                </div>
+            </div>
+            <div class="row no-gutters mt-3 col-12 d-flex justify-content-center">
+                <div class="col-xl-6 col-md-3 col-sm-10 d-flex justify-content-end">
+                    <button type="submit" class="btn btn-secondary col-4 create-ticket-button">Envoyer</button>
+                </div>
+            </div>
+        </div>
+    </form>
+    <div class="mt-3 blank-space"></div>
+</div>
+{% endblock %}
+{% block javascript %}
+<script>
+
+   $(window).on('load', function(){
+
+        description_editor = CKEDITOR.replace('id_description',
+        {
+            customConfig : 'config_custom.js',
+            height: '20vh',
+        })
+
+        "{% autoescape off %}"
+        let data = `{{ description_content|safe }}`;
+        description_editor.setData(data);
+        "{% endautoescape %}"
+
+    });
+
+    /* FILE UPLOAD PREVIEW PART ; ONLY IMG */
+    function readURL(input) {
+        if (input.files && input.files[0]) {
+            var reader = new FileReader();
+
+            reader.onload = function (e) {
+                $('#image-preview').attr('src', e.target.result);
+            }
+
+            reader.readAsDataURL(input.files[0]);
+        }
+    }
+
+
+    /* FILE LIST VIEW UPDATE CLASS */
+    $("#id_image").change(function(){
+        readURL(this);
+    });
+
+    $('.fake-input-file').on('click', function(){
+        $('.hidden-input-file').click();
+    })
+
+</script>
+{% endblock %}
