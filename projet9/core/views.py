@@ -424,7 +424,7 @@ class DeletePost(LoginRequiredMixin, SuccessMessageMixin, DeleteView):
     success_url = reverse_lazy('posts_view')
     success_message = (
         '<div class="alert alert-success text-center col-xl-12 col-md-12 col-sm-10 mt-1" role="alert">'
-        "<p>Critique modifiée avec succès.</p>"
+        "<p>Critique supprimée avec succès.</p>"
         "</div>"
     )
 
@@ -443,7 +443,7 @@ class DisplaySuscribeView(LoginRequiredMixin, TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        user_follow_list = UserFollows.objects.filter(user_id=self.request.user.id).select_related('user', 'user__id', 'user__username').values('followed_user_id__username')
+        user_follow_list = UserFollows.objects.filter(user_id=self.request.user.id).select_related('user', 'user__id', 'user__username').values('id','followed_user_id__username')
         followed_by_list = UserFollows.objects.filter(followed_user_id=self.request.user.id).select_related('user', 'user__id', 'user__username').values('user_id__username')
         context["suscribe"] = user_follow_list
         context["followed_by"] = followed_by_list
@@ -477,7 +477,7 @@ class DisplaySuscribeView(LoginRequiredMixin, TemplateView):
         else:
             messages.add_message(
                 self.request,
-                messages.INFO,
+                messages.ERROR,
                 '<div class="alert alert-info text-center col-xl-12 col-md-12 col-sm-10 mt-1" role="alert">'
                 '<p>l\'utilisateur que vous recherchez n\'existe pas.</p>'
                 '</div>',
@@ -485,6 +485,21 @@ class DisplaySuscribeView(LoginRequiredMixin, TemplateView):
         return HttpResponseRedirect(reverse('suscribe_view'))
 
 
+class UnfollowUser(LoginRequiredMixin, SuccessMessageMixin, DeleteView):
+    login_url = settings.LOGIN_URL
+    template_name: str = "dashboard/suscribe.html"
+    success_url = reverse_lazy('suscribe_view')
+    model = UserFollows
+    success_message = (
+        '<div class="alert alert-success text-center col-xl-12 col-md-12 col-sm-10 mt-1" role="alert">'
+        "<p>Vous ne suivez plus cet utilisateur.</p>"
+        "</div>"
+    )
+
+    def delete(self, request, *args, **kwargs):
+        data_to_return = super(UnfollowUser, self).delete(request, *args, **kwargs)
+        messages.success(self.request, self.success_message)
+        return data_to_return
 
 
 class UserLogout(RedirectView):

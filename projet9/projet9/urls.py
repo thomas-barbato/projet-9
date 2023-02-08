@@ -78,6 +78,13 @@ urlpatterns = [
         name="suscribe_view",
     ),
     path(
+        "dashboard/suscribe/delete/<int:pk>",
+        core_views.UnfollowUser.as_view(
+            template_name="dashboard/suscribe.html"
+        ),
+        name="unfollow_user",
+    ),
+    path(
         "logout",
         core_views.UserLogout.as_view(),
         name="user_logout",
