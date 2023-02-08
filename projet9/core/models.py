@@ -1,17 +1,15 @@
-import datetime
+"""import"""
+import os
 from django.db import models
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.contrib.auth.models import User
 from django.urls import reverse
 
-
-
-import os
-
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "projet9.settings")
 
 
 class Ticket(models.Model):
+    """docstring"""
     title = models.CharField(max_length=128)
     description = models.TextField(max_length=2048, blank=True)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
@@ -19,10 +17,12 @@ class Ticket(models.Model):
     time_created = models.DateTimeField("Created Time", auto_now_add=True)
 
     def get_absolute_url(self):
-        return reverse('create_ticket_view')
+        """docstring"""
+        return reverse("create_ticket_view")
 
 
 class UserFollows(models.Model):
+    """docstring"""
     user = models.ForeignKey(
         User, on_delete=models.CASCADE, related_name="following"
     )
@@ -31,10 +31,12 @@ class UserFollows(models.Model):
     )
 
     class Meta:
+        """docstring"""
         unique_together = ("user", "followed_user")
 
 
 class Review(models.Model):
+    """docstring"""
     # need to search for a solution about null=True in FK...
     ticket = models.ForeignKey(Ticket, on_delete=models.CASCADE)
     rating = models.PositiveSmallIntegerField(
@@ -48,4 +50,5 @@ class Review(models.Model):
     time_created = models.DateTimeField("Created Time", auto_now_add=True)
 
     def get_absolute_url(self):
-        return reverse('posts_view')
+        """docstring"""
+        return reverse("posts_view")

@@ -60,14 +60,14 @@ urlpatterns = [
     ),
     path(
         "dashboard/posts/delete/<int:pk>",
-        core_views.DeletePost.as_view(
-            template_name="dashboard/posts.html"
-        ),
+        core_views.DeletePost.as_view(template_name="dashboard/posts.html"),
         name="delete_post",
     ),
     path(
         "dashboard/posts/<int:pk>",
-        core_views.UpdatePost.as_view(template_name="dashboard/update_post.html"),
+        core_views.UpdatePost.as_view(
+            template_name="dashboard/update_post.html"
+        ),
         name="update_post_view",
     ),
     path(

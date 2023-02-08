@@ -1,56 +1,77 @@
-from django.contrib.messages.views import SuccessMessageMixin
-from django.shortcuts import render
-from django.contrib.auth import authenticate, login, logout
-from django.views import View
-from django.views.generic import RedirectView, UpdateView, DeleteView, TemplateView, CreateView, FormView
-from .forms import *
-from .models import *
-from django.views.decorators.csrf import csrf_protect, csrf_exempt
-from django.contrib.auth.mixins import LoginRequiredMixin
-from django.conf import settings
-from django.utils.decorators import method_decorator
-from django.http import HttpResponseRedirect, JsonResponse, HttpResponse
-from django.urls import reverse, reverse_lazy
+""" imports """
 import datetime
-from .classes.files import HandleUploadedFile
+from django.conf import settings
+from django.shortcuts import render
 from django.contrib import messages
-import json
+from django.contrib.auth.models import User
+from django.urls import reverse, reverse_lazy
+from django.utils.decorators import method_decorator
+from django.views.decorators.csrf import csrf_protect
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.http import HttpResponseRedirect, JsonResponse
+from django.contrib.auth import authenticate, login, logout
+from django.contrib.messages.views import SuccessMessageMixin
+from django.views.generic import (
+    RedirectView,
+    UpdateView,
+    DeleteView,
+    TemplateView,
+    CreateView,
+    FormView,
+)
+from .forms import (
+    SigninForm,
+    SignupForm,
+    CreateTicketForm,
+    CreateReviewForm,
+    FollowUserForm,
+)
+from .models import Ticket, Review, UserFollows
+from .classes.files import HandleUploadedFile
 
 
 class JsonableResponseMixin:
+    """
+    Mixin to add JSON support to a form.
+    Must be used with an object-based FormView (e.g. CreateView)
+    """
+
     def form_invalid(self, form):
-        response = super(JsonableResponseMixin, self).form_invalid(form)
+        """docstring"""
+        response = super().form_invalid(form)
         if self.request.is_ajax():
             return JsonResponse(form.errors, status=400)
-        else:
-            return response
+        return response
 
     def form_valid(self, form):
-        response = super(JsonableResponseMixin, self).form_valid(form)
+        """docstring"""
+        response = super().form_valid(form)
         if self.request.is_ajax():
-            data = {
-                'message': "Successfully submitted form data."
-            }
+            data = {"message": "Successfully submitted form data."}
             return JsonResponse(data)
-        else:
-            return response
+        return response
 
 
 class CreateUserView(JsonableResponseMixin, FormView):
+    """docstring"""
+
     template_name: str = "authentication/create_user.html"
     form_class = SignupForm
-    success_url = reverse_lazy('login_view')
+    success_url = reverse_lazy("login_view")
     success_message = (
-                '<div class="alert alert-success text-center col-xl-12 col-md-12 col-sm-10 mt-1" role="alert">'
-                "<p>Votre compte a été créé avec succès.</p>"
-                "</div>")
+        '<div class="alert alert-success text-center col-xl-12 col-md-12 col-sm-10 mt-1" role="alert">'
+        "<p>Votre compte a été créé avec succès.</p>"
+        "</div>"
+    )
 
     def get_context_data(self, **kwargs):
+        """docstring"""
         context = super().get_context_data(**kwargs)
-        context['signup_form'] = SignupForm
+        context["signup_form"] = SignupForm
         return context
 
     def form_valid(self, form):
+        """docstring"""
         response = super(JsonableResponseMixin, self).form_valid(form)
         if self.request.is_ajax():
             if form.cleaned_data["password"] == form.cleaned_data["password2"]:
@@ -61,34 +82,35 @@ class CreateUserView(JsonableResponseMixin, FormView):
                     is_staff=False,
                     date_joined=datetime.datetime.now(),
                 ).save()
-                response = {'status': 1}
+                response = {"status": 1}
                 messages.add_message(
-                    self.request,
-                    messages.SUCCESS,
-                    self.success_message
+                    self.request, messages.SUCCESS, self.success_message
                 )
                 return JsonResponse(response, status=200)
-        else:
-            return response
+        return response
 
     def form_invalid(self, form):
+        """docstring"""
         response = super(JsonableResponseMixin, self).form_invalid(form)
         if self.request.is_ajax():
             response = {"status": 0, "errors": dict(form.errors.items())}
-            return JsonResponse(response, status=200)
-        return response
+        return JsonResponse(response, status=200)
 
 
 class LoginView(TemplateView):
+    """docstring"""
+
     template_name: str = "authentication/login.html"
 
     def get_context_data(self, **kwargs):
+        """docstring"""
         context = super().get_context_data(**kwargs)
-        context['signin_form'] = SigninForm
+        context["signin_form"] = SigninForm
         return context
 
     @method_decorator(csrf_protect)
-    def post(self, request, *args, **kwargs):
+    def post(self, request):
+        """docstring"""
         user = authenticate(
             request,
             username=request.POST.get("username"),
@@ -105,20 +127,21 @@ class LoginView(TemplateView):
                 "</div>",
             )
             return JsonResponse(response, status=200)
-        else:
-            response = {"errors": "true"}
-            return JsonResponse(response, status=200)
+        response = {"errors": "true"}
+        return JsonResponse(response, status=200)
 
 
 class FluxView(LoginRequiredMixin, SuccessMessageMixin, TemplateView):
+    """docstring"""
+
     login_url = settings.LOGIN_URL
     template_name = "dashboard/posts.html"
 
     def get_context_data(self, **kwargs):
+        """docstring"""
         context = super().get_context_data(**kwargs)
-        query_review = [
-            result
-            for result in Review.objects.select_related(
+        query_review = list(
+            Review.objects.select_related(
                 "user", "ticket", "ticket__user_id", "user__username"
             )
             .values(
@@ -134,13 +157,12 @@ class FluxView(LoginRequiredMixin, SuccessMessageMixin, TemplateView):
                 "ticket__user_id__username",
             )
             .order_by("-time_created")
-        ]
+        )
 
         review = [dict(item, is_review=True) for item in query_review]
 
-        query_ticket = [
-            result
-            for result in Ticket.objects.select_related("user")
+        query_ticket = list(
+            Ticket.objects.select_related("user")
             .values(
                 "id",
                 "title",
@@ -151,7 +173,7 @@ class FluxView(LoginRequiredMixin, SuccessMessageMixin, TemplateView):
                 "time_created",
             )
             .order_by("-time_created")
-        ]
+        )
 
         ticket = [dict(item, is_ticket=True) for item in query_ticket]
 
@@ -162,22 +184,25 @@ class FluxView(LoginRequiredMixin, SuccessMessageMixin, TemplateView):
                 result.append(item)
 
         result = sorted(result, key=lambda d: d["time_created"], reverse=True)
-        context['posts'] = result
-        context['rating_range'] = range(5)
+        context["posts"] = result
+        context["rating_range"] = range(5)
         return context
 
 
 class CreateTicketView(LoginRequiredMixin, JsonableResponseMixin, CreateView):
+    """docstring"""
+
     login_url = settings.LOGIN_URL
     template_name = "dashboard/create_ticket.html"
     model = Ticket
     fields = ["title", "description", "image"]
-    success_url = reverse_lazy('flux_view')
+    success_url = reverse_lazy("flux_view")
     success_message = (
-                '<div class="alert alert-success text-center col-xl-12 col-md-12 col-sm-10 mt-1" role="alert">'
-                "<p>Votre demande de critique à été créée avec succès.</p>"
-                "</div>")
-    error_message=(
+        '<div class="alert alert-success text-center col-xl-12 col-md-12 col-sm-10 mt-1" role="alert">'
+        "<p>Votre demande de critique à été créée avec succès.</p>"
+        "</div>"
+    )
+    error_message = (
         '<div class="alert alert-danger text-center col-xl-12 col-md-12 col-sm-10 mt-1" role="alert">'
         "<p>Veuillez remplir <b>tous</b> les champs correctement.</p>"
         "<p>Assurez vous que votre image est à la bonne extension : <b>.jpg, .png</b>.</p>"
@@ -185,8 +210,10 @@ class CreateTicketView(LoginRequiredMixin, JsonableResponseMixin, CreateView):
     )
 
     def form_valid(self, form):
+        """docstring"""
         file = HandleUploadedFile(
-            file=self.request.FILES["image"], filename=self.request.FILES["image"].name
+            file=self.request.FILES["image"],
+            filename=self.request.FILES["image"].name,
         )
         file.upload()
         Ticket.objects.create(
@@ -203,6 +230,7 @@ class CreateTicketView(LoginRequiredMixin, JsonableResponseMixin, CreateView):
         return HttpResponseRedirect(reverse("flux_view"))
 
     def form_invalid(self, form):
+        """docstring"""
         messages.add_message(
             self.request,
             messages.ERROR,
@@ -212,34 +240,39 @@ class CreateTicketView(LoginRequiredMixin, JsonableResponseMixin, CreateView):
 
 
 class CreateFullReviewView(LoginRequiredMixin, CreateView):
+    """docstring"""
+
     login_url = settings.LOGIN_URL
     template_name = "dashboard/create_review.html"
     model = Review
     fields = ["headline", "body", "rating"]
-    success_url = reverse_lazy('flux_view')
+    success_url = reverse_lazy("flux_view")
     success_message = (
-                '<div class="alert alert-success text-center col-xl-12 col-md-12 col-sm-10 mt-1" role="alert">'
-                "<p>Votre critique à été créée avec succès.</p>"
-                "</div>"
+        '<div class="alert alert-success text-center col-xl-12 col-md-12 col-sm-10 mt-1" role="alert">'
+        "<p>Votre critique à été créée avec succès.</p>"
+        "</div>"
     )
     error_message = (
-            '<div class="alert alert-danger text-center col-xl-12 col-md-12 col-sm-10 mt-1" role="alert">'
-            "<p>Veuillez remplir les champs correctement.</p>"
-            "<p>Assurez vous que votre image est à la bonne extension : <b>.jpg, .png</b>.</p>"
-            "</div>",
+        '<div class="alert alert-danger text-center col-xl-12 col-md-12 col-sm-10 mt-1" role="alert">'
+        "<p>Veuillez remplir les champs correctement.</p>"
+        "<p>Assurez vous que votre image est à la bonne extension : <b>.jpg, .png</b>.</p>"
+        "</div>",
     )
 
     def get_context_data(self, **kwargs):
+        """docstring"""
         context = super().get_context_data(**kwargs)
         context["rating_range"] = range(6)
         return context
 
     def form_valid(self, form):
+        """docstring"""
         review_form = CreateReviewForm(self.request.POST)
         ticket_form = CreateTicketForm(self.request.POST, self.request.FILES)
         if review_form.is_valid() and ticket_form.is_valid():
             file = HandleUploadedFile(
-                file=self.request.FILES["image"], filename=self.request.FILES["image"].name
+                file=self.request.FILES["image"],
+                filename=self.request.FILES["image"].name,
             )
             file.upload()
             Ticket.objects.create(
@@ -266,9 +299,10 @@ class CreateFullReviewView(LoginRequiredMixin, CreateView):
                 messages.SUCCESS,
                 self.success_message,
             )
-            return HttpResponseRedirect(reverse("flux_view"))
+        return HttpResponseRedirect(reverse("flux_view"))
 
     def form_invalid(self, form):
+        """docstring"""
         messages.add_message(
             self.request,
             messages.ERROR,
@@ -278,6 +312,8 @@ class CreateFullReviewView(LoginRequiredMixin, CreateView):
 
 
 class CreateReviewView(LoginRequiredMixin, FormView):
+    """docstring"""
+
     login_url = settings.LOGIN_URL
     template_name = "dashboard/create_answer_review.html"
     form_class = CreateReviewForm
@@ -287,7 +323,7 @@ class CreateReviewView(LoginRequiredMixin, FormView):
         "<p>Votre critique à été créée avec succès.</p>"
         "</div>"
     )
-    error_message= (
+    error_message = (
         '<div class="alert alert-danger text-center col-xl-12 col-md-12 col-sm-10 mt-1" role="alert">'
         "<p>Veuillez remplir les champs correctement.</p>"
         "</div>"
@@ -296,35 +332,40 @@ class CreateReviewView(LoginRequiredMixin, FormView):
         '<div class="alert alert-danger text-center col-xl-12 col-md-12 col-sm-10 mt-1" role="alert">'
         "<p>le ticket pour lequel vous tentez de faire une review n'existe pas.</p>"
         "</div>"
-
     )
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        ticket_id = self.kwargs['id']
-        ticket = [
-            ticket
-            for ticket in Ticket.objects.select_related(
-                "user", "ticket", "ticket__user_id__username", "user__username", "user_id__username").filter(
-                id=ticket_id).values(
+        ticket_id = self.kwargs["id"]
+        ticket = list(
+            Ticket.objects.select_related(
+                "user",
+                "ticket",
+                "ticket__user_id__username",
+                "user__username",
+                "user_id__username",
+            )
+            .filter(id=ticket_id)
+            .values(
                 "id",
                 "title",
                 "description",
                 "image",
                 "time_created",
                 "user_id",
-                "user_id__username"
+                "user_id__username",
             )
-        ]
+        )
         context["rating_range"] = range(6)
         context["ticket"] = ticket
         return context
 
     def form_valid(self, form):
-        ticket_id = self.kwargs['id']
+        """docstring"""
+        ticket_id = self.kwargs["id"]
         if (
-                isinstance(ticket_id, int) is True
-                and Ticket.objects.filter(id=ticket_id).exists()
+            isinstance(ticket_id, int) is True
+            and Ticket.objects.filter(id=ticket_id).exists()
         ):
             Review.objects.create(
                 rating=int(self.request.POST.get("rating")),
@@ -338,16 +379,16 @@ class CreateReviewView(LoginRequiredMixin, FormView):
                 messages.SUCCESS,
                 self.success_message,
             )
-            return HttpResponseRedirect(reverse("flux_view"))
         else:
             messages.add_message(
                 self.request,
                 messages.ERROR,
                 self.error_message2,
             )
-            return HttpResponseRedirect(reverse("flux_view"))
+        return HttpResponseRedirect(reverse("flux_view"))
 
     def form_invalid(self, form):
+        """docstring"""
         messages.add_message(
             self.request,
             messages.ERROR,
@@ -357,6 +398,8 @@ class CreateReviewView(LoginRequiredMixin, FormView):
 
 
 class DislayPostsView(LoginRequiredMixin, TemplateView):
+    """docstring"""
+
     login_url = settings.LOGIN_URL
     template_name = "dashboard/posts.html"
     empty_content_message = (
@@ -366,12 +409,13 @@ class DislayPostsView(LoginRequiredMixin, TemplateView):
     )
 
     def get_context_data(self, **kwargs):
+        """docstring"""
         context = super().get_context_data(**kwargs)
-        query_review = [
-            result
-            for result in Review.objects.select_related(
+        query_review = list(
+            Review.objects.select_related(
                 "user", "ticket", "ticket__user_id", "user__username"
-            ).filter(user_id=self.request.user.id)
+            )
+            .filter(user_id=self.request.user.id)
             .values(
                 "id",
                 "headline",
@@ -386,7 +430,7 @@ class DislayPostsView(LoginRequiredMixin, TemplateView):
                 "ticket__user_id__username",
             )
             .order_by("-time_created")
-        ]
+        )
 
         if len(query_review) == 0:
             messages.add_message(
@@ -401,27 +445,32 @@ class DislayPostsView(LoginRequiredMixin, TemplateView):
 
 
 class UpdatePost(LoginRequiredMixin, SuccessMessageMixin, UpdateView):
+    """docstring"""
+
     login_url = settings.LOGIN_URL
     model = Review
-    fields = [
-            "headline",
-            "body",
-            "rating"]
+    fields = ["headline", "body", "rating"]
     success_message = (
-                '<div class="alert alert-success text-center col-xl-12 col-md-12 col-sm-10 mt-1" role="alert">'
-                "<p>Critique modifiée avec succès.</p>"
-                "</div>")
+        '<div class="alert alert-success text-center col-xl-12 col-md-12 col-sm-10 mt-1" role="alert">'
+        "<p>Critique modifiée avec succès.</p>"
+        "</div>"
+    )
 
     def get_context_data(self, **kwargs):
+        """docstring"""
         context = super().get_context_data(**kwargs)
         context["rating_range"] = range(5)
-        context["body_content"] = Review.objects.filter(id=self.kwargs['pk'], user_id=self.request.user.id).values()[0]['body']
+        context["body_content"] = Review.objects.filter(
+            id=self.kwargs["pk"], user_id=self.request.user.id
+        ).values()[0]["body"]
         return context
 
 
 class DeletePost(LoginRequiredMixin, SuccessMessageMixin, DeleteView):
+    """docstring"""
+
     model = Review
-    success_url = reverse_lazy('posts_view')
+    success_url = reverse_lazy("posts_view")
     success_message = (
         '<div class="alert alert-success text-center col-xl-12 col-md-12 col-sm-10 mt-1" role="alert">'
         "<p>Critique supprimée avec succès.</p>"
@@ -429,42 +478,57 @@ class DeletePost(LoginRequiredMixin, SuccessMessageMixin, DeleteView):
     )
 
     def delete(self, request, *args, **kwargs):
-        data_to_return = super(DeletePost, self).delete(request, *args, **kwargs)
+        """docstring"""
+        data_to_return = super().delete(request, *args, **kwargs)
         messages.success(self.request, self.success_message)
         return data_to_return
 
 
 class DisplaySuscribeView(LoginRequiredMixin, TemplateView):
+    """docstring"""
+
     login_url = settings.LOGIN_URL
     template_name: str = "dashboard/suscribe.html"
-    success_url = reverse_lazy('suscribe_view')
+    success_url = reverse_lazy("suscribe_view")
     model = UserFollows
     form_class = FollowUserForm
 
     def get_context_data(self, **kwargs):
+        """docstring"""
         context = super().get_context_data(**kwargs)
-        user_follow_list = UserFollows.objects.filter(user_id=self.request.user.id).select_related('user', 'user__id', 'user__username').values('id','followed_user_id__username')
-        followed_by_list = UserFollows.objects.filter(followed_user_id=self.request.user.id).select_related('user', 'user__id', 'user__username').values('user_id__username')
+        user_follow_list = (
+            UserFollows.objects.filter(user_id=self.request.user.id)
+            .select_related("user", "user__id", "user__username")
+            .values("id", "followed_user_id__username")
+        )
+        followed_by_list = (
+            UserFollows.objects.filter(followed_user_id=self.request.user.id)
+            .select_related("user", "user__id", "user__username")
+            .values("user_id__username")
+        )
         context["suscribe"] = user_follow_list
         context["followed_by"] = followed_by_list
         return context
 
-    def post(self, request, *args, **kwargs):
-        username: str = self.request.POST.get('id_username')
+    def post(self):
+        """docstring"""
+        username: str = self.request.POST.get("id_username")
         followed_user = User.objects.filter(username=username)
         if followed_user.exists():
-            follower_id = followed_user.values('id', 'username')[0]['id']
-            if not UserFollows.objects.filter(user_id=self.request.user.id, followed_user=follower_id).exists():
+            follower_id = followed_user.values("id", "username")[0]["id"]
+            if not UserFollows.objects.filter(
+                user_id=self.request.user.id, followed_user=follower_id
+            ).exists():
                 UserFollows.objects.create(
                     user_id=self.request.user.id,
-                    followed_user=User(id=follower_id)
+                    followed_user=User(id=follower_id),
                 )
                 messages.add_message(
                     self.request,
                     messages.SUCCESS,
                     '<div class="alert alert-success text-center col-xl-12 col-md-12 col-sm-10 mt-1" role="alert">'
-                    f'<p>Vous suivez maintenant <b>{username}</b>.</p>'
-                    '</div>',
+                    f"<p>Vous suivez maintenant <b>{username}</b>.</p>"
+                    "</div>",
                 )
             else:
                 messages.add_message(
@@ -479,16 +543,18 @@ class DisplaySuscribeView(LoginRequiredMixin, TemplateView):
                 self.request,
                 messages.ERROR,
                 '<div class="alert alert-info text-center col-xl-12 col-md-12 col-sm-10 mt-1" role="alert">'
-                '<p>l\'utilisateur que vous recherchez n\'existe pas.</p>'
-                '</div>',
+                "<p>l'utilisateur que vous recherchez n'existe pas.</p>"
+                "</div>",
             )
-        return HttpResponseRedirect(reverse('suscribe_view'))
+        return HttpResponseRedirect(reverse("suscribe_view"))
 
 
 class UnfollowUser(LoginRequiredMixin, SuccessMessageMixin, DeleteView):
+    """docstring"""
+
     login_url = settings.LOGIN_URL
     template_name: str = "dashboard/suscribe.html"
-    success_url = reverse_lazy('suscribe_view')
+    success_url = reverse_lazy("suscribe_view")
     model = UserFollows
     success_message = (
         '<div class="alert alert-success text-center col-xl-12 col-md-12 col-sm-10 mt-1" role="alert">'
@@ -497,12 +563,15 @@ class UnfollowUser(LoginRequiredMixin, SuccessMessageMixin, DeleteView):
     )
 
     def delete(self, request, *args, **kwargs):
-        data_to_return = super(UnfollowUser, self).delete(request, *args, **kwargs)
+        """docstring"""
+        data_to_return = super().delete(request, *args, **kwargs)
         messages.success(self.request, self.success_message)
         return data_to_return
 
 
 class UserLogout(RedirectView):
+    """docstring"""
+
     login_url = settings.LOGIN_URL
     template_name: str = "authentication/login.html"
 

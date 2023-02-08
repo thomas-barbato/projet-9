@@ -1,13 +1,15 @@
+"""import """
+from pathlib import Path
+import re
 from django.core.exceptions import ValidationError
 from django.utils.safestring import mark_safe
 from django.utils.translation import gettext as _
 from django.contrib.auth.models import User
 from ..models import Ticket
-from pathlib import Path
-import re
 
 
 class CheckPasswordPolicy:
+    """docstring"""
     def __init__(self):
         self.password_pattern = (
             "^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[#?!@$%^&*-]).{8,}$"
@@ -39,6 +41,7 @@ class CheckPasswordPolicy:
             )
 
     def get_help_text(self):
+        """docstring"""
         return _(
             '<div class="alert alert-dark" role="alert">'
             "<ul>"
@@ -54,6 +57,7 @@ class CheckPasswordPolicy:
 
 
 class CheckUsernameAlreadyUsed:
+    """docstring"""
     def __init__(self):
         self.table = User
 
@@ -76,6 +80,7 @@ class CheckUsernameAlreadyUsed:
             )
 
     def get_help_text(self):
+        """docstring"""
         return _(
             '<div class="alert alert-danger text-center col-xl-4 col-md-4 col-sm-12" role="alert">'
             "<ul>"
@@ -88,6 +93,7 @@ class CheckUsernameAlreadyUsed:
 
 
 class CheckImageExtension:
+    """docstring"""
     def __init__(self):
         self.table = Ticket
 

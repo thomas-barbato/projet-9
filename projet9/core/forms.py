@@ -1,5 +1,6 @@
+"""imports"""
 from django import forms
-from django.contrib.auth.forms import AuthenticationForm, UserCreationForm
+from django.contrib.auth.forms import AuthenticationForm
 from django.forms.widgets import PasswordInput, TextInput
 from .validators.check_data import (
     CheckPasswordPolicy,
@@ -9,6 +10,8 @@ from .validators.check_data import (
 
 
 class SigninForm(AuthenticationForm):
+    """docstring"""
+
     username = forms.CharField(
         widget=TextInput(
             attrs={
@@ -32,6 +35,8 @@ class SigninForm(AuthenticationForm):
 
 
 class SignupForm(forms.Form):
+    """docstring"""
+
     username = forms.CharField(
         widget=TextInput(
             attrs={
@@ -70,6 +75,8 @@ class SignupForm(forms.Form):
 
 
 class CreateTicketForm(forms.Form):
+    """docstring"""
+
     title = forms.CharField(
         widget=TextInput(attrs={}),
         required=True,
@@ -84,6 +91,8 @@ class CreateTicketForm(forms.Form):
 
 
 class CreateReviewForm(forms.Form):
+    """docstring"""
+
     headline = forms.CharField(
         widget=TextInput(attrs={}),
         required=True,
@@ -102,6 +111,8 @@ class CreateReviewForm(forms.Form):
 
 
 class FollowUserForm(forms.Form):
+    """docstring"""
+
     username = forms.CharField(
         widget=TextInput(attrs={}),
         required=True,

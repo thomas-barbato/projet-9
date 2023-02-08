@@ -5,7 +5,7 @@ import os
 
 
 class HandleUploadedFile:
-    def __init__(self, file = [], filename = ""):
+    def __init__(self, file=[], filename=""):
         self.file = file
         self.filename = filename
 

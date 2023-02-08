@@ -22,7 +22,6 @@ ALLOWED_HOSTS = []
 
 INSTALLED_APPS = [
     "core",
-    "daphne",
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
@@ -73,7 +72,6 @@ LOGIN_REDIRECT_URL = "core.login_view"
 LOGOUT_REDIRECT_URL = "core.login_view"
 
 WSGI_APPLICATION = "projet9.wsgi.application"
-ASGI_APPLICATION = "projet9.asgi.application"
 CHANNEL_LAYERS = {
     "default": {"BACKEND": "channels.layers.InMemoryChannelLayer"}
 }
