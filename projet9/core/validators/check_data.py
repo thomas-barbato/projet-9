@@ -61,6 +61,7 @@ class CheckUsernameAlreadyUsed:
     def __init__(self):
         self.table = User
 
+    # TODO: Could this be a validate function instead of including inside a class / staticmethod inside the class
     def validate(self, user):
         """
         check if username already exists in db.
@@ -98,6 +99,7 @@ class CheckImageExtension:
     def __init__(self):
         self.table = Ticket
 
+    # TODO: Could this be a validate function instead of including inside a class / staticmethod inside the class
     def validate(self, file):
         """
         check if extension is allowed.

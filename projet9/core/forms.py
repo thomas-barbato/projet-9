@@ -58,6 +58,7 @@ class SignupForm(forms.Form):
         ),
         required=True,
         label="",
+        # TODO: Call directly from AUTH_PASSWORD_VALIDATORS
         validators=[CheckPasswordPolicy().validate],
     )
     password2 = forms.CharField(
@@ -69,6 +70,7 @@ class SignupForm(forms.Form):
         ),
         required=True,
         label="",
+        # TODO: Call directly from AUTH_PASSWORD_VALIDATORS ?
         validators=[CheckPasswordPolicy().validate],
         help_text=CheckPasswordPolicy().get_help_text(),
     )
@@ -91,6 +93,7 @@ class CreateTicketForm(forms.Form):
 
     def save(self, *args, **kwargs):
         print("SAVE PRINT")
+        # TODO: Pass user as save parameter with and save here
         return super().save(*args, **kwargs)
 
 
@@ -98,6 +101,7 @@ class CreateReviewForm(forms.Form):
     """docstring"""
 
     headline = forms.CharField(
+        # TODO: Is empty attrs neeeded?
         widget=TextInput(attrs={}),
         required=True,
         label="",
@@ -118,6 +122,7 @@ class FollowUserForm(forms.Form):
     """docstring"""
 
     username = forms.CharField(
+        # TODO: Is empty attrs neeeded?
         widget=TextInput(attrs={}),
         required=True,
         label="",

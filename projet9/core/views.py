@@ -1,5 +1,8 @@
+# TODO: Change text for docstring
 """ imports """
 import datetime
+# TODO: Blank line here
+# TODO: Order imports by alphabetical order: isort
 from django.conf import settings
 from django.shortcuts import render
 from django.contrib import messages
@@ -19,6 +22,7 @@ from django.views.generic import (
     CreateView,
     FormView,
 )
+# TODO: Blank line here
 from .forms import (
     SigninForm,
     SignupForm,
@@ -68,6 +72,7 @@ class CreateUserView(JsonableResponseMixin, FormView):
         """docstring"""
         response = super(JsonableResponseMixin, self).form_valid(form)
         if self.request.is_ajax():
+            # TODO: Find a way using form.save instead of manually creating a User entry
             if form.cleaned_data["password"] == form.cleaned_data["password2"]:
                 User.objects.create_user(
                     username=form.cleaned_data["username"],
@@ -132,6 +137,7 @@ class FluxView(LoginRequiredMixin, SuccessMessageMixin, TemplateView):
     def get_context_data(self, **kwargs):
         """docstring"""
         context = super().get_context_data(**kwargs)
+
         query_review = list(
             # TODO : ANNOTATION
             Review.objects.select_related("user", "ticket", "ticket__user_id", "user__username")
@@ -150,6 +156,7 @@ class FluxView(LoginRequiredMixin, SuccessMessageMixin, TemplateView):
             .order_by("-time_created")
         )
 
+        # TODO: Use annotate
         review = [dict(item, is_review=True) for item in query_review]
 
         query_ticket = list(
@@ -166,16 +173,21 @@ class FluxView(LoginRequiredMixin, SuccessMessageMixin, TemplateView):
             .order_by("-time_created")
         )
 
+        # TODO: Use annotate
         ticket = [dict(item, is_ticket=True) for item in query_ticket]
 
+        # TODO: Use Union to join querysets from different query sets together
         result = []
         ticket.extend(review)
         for item in ticket:
             if item not in result:
                 result.append(item)
 
+        # TODO: Do an order by to sort the queryset containing multiple models entries
         result = sorted(result, key=lambda d: d["time_created"], reverse=True)
         context["posts"] = result
+
+        # TODO: Instead of ding it that way, maybe you can define a list directly in the template [1, 2, 3, 4, 5]?
         context["rating_range"] = range(5)
         return context
 
