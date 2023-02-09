@@ -15,7 +15,7 @@ urlpatterns = [
     path("admin", admin.site.urls, name="admin"),
     path(
         "",
-        core_views.LoginView.as_view(template_name="authentication/login.html"),
+        core_views.LoginAjaxView.as_view(template_name="authentication/login.html"),
         name="login_view",
     ),
     path(

@@ -64,12 +64,6 @@ class CreateUserView(JsonableResponseMixin, FormView):
         "</div>"
     )
 
-    def get_context_data(self, **kwargs):
-        """docstring"""
-        context = super().get_context_data(**kwargs)
-        context["signup_form"] = SignupForm
-        return context
-
     def form_valid(self, form):
         """docstring"""
         response = super(JsonableResponseMixin, self).form_valid(form)
@@ -95,7 +89,7 @@ class CreateUserView(JsonableResponseMixin, FormView):
         return JsonResponse(response, status=200)
 
 
-class LoginView(TemplateView):
+class LoginAjaxView(TemplateView):
     """docstring"""
 
     template_name: str = "authentication/login.html"
@@ -139,6 +133,7 @@ class FluxView(LoginRequiredMixin, SuccessMessageMixin, TemplateView):
         """docstring"""
         context = super().get_context_data(**kwargs)
         query_review = list(
+            # TODO : ANNOTATION
             Review.objects.select_related("user", "ticket", "ticket__user_id", "user__username")
             .values(
                 "headline",
@@ -191,7 +186,8 @@ class CreateTicketView(LoginRequiredMixin, JsonableResponseMixin, CreateView):
     login_url = settings.LOGIN_URL
     template_name = "dashboard/create_ticket.html"
     model = Ticket
-    fields = ["title", "description", "image"]
+    form_class = CreateTicketForm
+    #fields = ["title", "description", "image"]
     success_url = reverse_lazy("flux_view")
     success_message = (
         '<div class="alert alert-success text-center col-xl-12 col-md-12 col-sm-10 mt-1" role="alert">'
@@ -207,6 +203,8 @@ class CreateTicketView(LoginRequiredMixin, JsonableResponseMixin, CreateView):
 
     def form_valid(self, form):
         """docstring"""
+
+
         file = HandleUploadedFile(
             file=self.request.FILES["image"],
             filename=self.request.FILES["image"].name,
@@ -218,12 +216,14 @@ class CreateTicketView(LoginRequiredMixin, JsonableResponseMixin, CreateView):
             user_id=self.request.user.id,
             image=file.get_filename(),
         )
+        form.cleaned_data["image"] = file.get_filename()
+        form.cleaned_data["user_id"] = file.get_filename()
         messages.add_message(
             self.request,
             messages.SUCCESS,
             self.success_message,
         )
-        return HttpResponseRedirect(reverse("flux_view"))
+        return super().form_valid(form)
 
     def form_invalid(self, form):
         """docstring"""
@@ -232,7 +232,7 @@ class CreateTicketView(LoginRequiredMixin, JsonableResponseMixin, CreateView):
             messages.ERROR,
             self.error_message,
         )
-        return HttpResponseRedirect(reverse("create_ticket_view"))
+        return super().form_invalid(form)
 
 
 class CreateFullReviewView(LoginRequiredMixin, CreateView):
@@ -591,7 +591,7 @@ class DisplaySuscribeView(LoginRequiredMixin, TemplateView):
         context["followed_by"] = followed_by_list
         return context
 
-    def post(self):
+    def post(self, *args, **kwargs):  # pylint: disable=unused-argument
         """docstring"""
         username: str = self.request.POST.get("id_username")
         followed_user = User.objects.filter(username=username)

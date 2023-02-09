@@ -1,9 +1,10 @@
 ﻿[MAIN]
 
 # disable false positive no-member in Model class
-disable=E1101, R0903
+disable=E1101, R0903, too-many-ancestors
 # disable test and migrations files
 ignore-paths=core/tests.py, core/migrations/*
+
 
 # Analyse import fallback blocks. This can be used to support both Python 2 and
 # 3 compatible code, which means that the block might have code that exists

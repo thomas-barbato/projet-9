@@ -7,10 +7,10 @@
         <div class="col-xl-4 col-md-4 col-sm-12">
             <form method="POST" action="">
                 {% csrf_token %}
-                {{ signup_form.username }}
+                {{ form.username }}
                 <div id="username_error"></div>
-                {{ signup_form.password }}
-                {{ signup_form.password2 }}
+                {{ form.password }}
+                {{ form.password2 }}
                 <div id="password_error"></div>
                 <div class="col-12 text-center mt-2 d-flex justify-content-end">
                     <form method="GET" action="{% url 'login_view' %}" class=" text-align-center col-6">
