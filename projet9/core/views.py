@@ -232,6 +232,7 @@ class CreateTicketView(LoginRequiredMixin, JsonableResponseMixin, CreateView):
         )
         form.cleaned_data["image"] = file.get_filename()
         form.cleaned_data["user_id"] = file.get_filename()
+        # TODO: Use SuccessMessageMixin
         messages.add_message(
             self.request,
             messages.SUCCESS,
@@ -241,6 +242,7 @@ class CreateTicketView(LoginRequiredMixin, JsonableResponseMixin, CreateView):
 
     def form_invalid(self, form):
         """docstring"""
+        # TODO: Use ErrorMessageMixin
         messages.add_message(
             self.request,
             messages.ERROR,
@@ -304,6 +306,7 @@ class CreateFullReviewView(LoginRequiredMixin, CreateView):
                 ticket_id=ticket.id,
                 user_id=self.request.user.id,
             )
+            # TODO: Use SuccessMessageMixin
             messages.add_message(
                 self.request,
                 messages.SUCCESS,
@@ -313,6 +316,7 @@ class CreateFullReviewView(LoginRequiredMixin, CreateView):
 
     def form_invalid(self, form):
         """docstring"""
+        # TODO: Use ErrorMessageMixin
         messages.add_message(
             self.request,
             messages.ERROR,
@@ -381,12 +385,14 @@ class CreateReviewView(LoginRequiredMixin, FormView):
                 ticket_id=ticket_id,
                 user_id=self.request.user.id,
             )
+            # TODO: Use SuccessMessageMixin
             messages.add_message(
                 self.request,
                 messages.SUCCESS,
                 self.success_message,
             )
         else:
+            # TODO: Use ErrorMessageMixin
             messages.add_message(
                 self.request,
                 messages.ERROR,
@@ -396,6 +402,7 @@ class CreateReviewView(LoginRequiredMixin, FormView):
 
     def form_invalid(self, form):
         """docstring"""
+        # TODO: Use ErrorMessageMixin
         messages.add_message(
             self.request,
             messages.ERROR,
@@ -462,6 +469,7 @@ class DislayPostsView(LoginRequiredMixin, TemplateView):
 
         result = sorted(result, key=lambda d: d["time_created"], reverse=True)
         if len(query_review) == 0:
+            # TODO: Use InfoMessageMixin
             messages.add_message(
                 self.request,
                 messages.INFO,
@@ -532,6 +540,7 @@ class UpdateTicket(LoginRequiredMixin, SuccessMessageMixin, UpdateView):
             ticket.user_id = self.request.user.id
             ticket.image = file.get_filename()
             ticket.save()
+            # TODO: Use SuccessMessageMixin
             messages.add_message(
                 self.request,
                 messages.SUCCESS,
@@ -618,6 +627,7 @@ class DisplaySuscribeView(LoginRequiredMixin, TemplateView):
                     user_id=self.request.user.id,
                     followed_user=User(id=follower_id),
                 )
+                # TODO: Use SuccessMessageMixin ?
                 messages.add_message(
                     self.request,
                     messages.SUCCESS,
@@ -626,6 +636,7 @@ class DisplaySuscribeView(LoginRequiredMixin, TemplateView):
                     "</div>",
                 )
             else:
+                # TODO: Use InfoMessageMixin
                 messages.add_message(
                     self.request,
                     messages.INFO,
@@ -634,6 +645,7 @@ class DisplaySuscribeView(LoginRequiredMixin, TemplateView):
                     "</div>",
                 )
         else:
+            # TODO: Use ErrorMessageMixin
             messages.add_message(
                 self.request,
                 messages.ERROR,
@@ -661,6 +673,8 @@ class UnfollowUser(LoginRequiredMixin, SuccessMessageMixin, DeleteView):
         """docstring"""
         # TODO: I would just do return super()... after message.success
         data_to_return = super().delete(request, *args, **kwargs)
+        # TODO: Not needed if using mixin
+        #   https://docs.djangoproject.com/fr/4.1/ref/contrib/messages/#django.contrib.messages.views.SuccessMessageMixin
         messages.success(self.request, self.success_message)
         return data_to_return
 
