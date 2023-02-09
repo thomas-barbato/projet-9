@@ -115,6 +115,7 @@ class LoginAjaxView(TemplateView):
         )
         if user is not None:
             login(request, user)
+            # TODO: ?
             response = {"status": 1}
             messages.add_message(
                 request,
@@ -199,6 +200,7 @@ class CreateTicketView(LoginRequiredMixin, JsonableResponseMixin, CreateView):
     template_name = "dashboard/create_ticket.html"
     model = Ticket
     form_class = CreateTicketForm
+    # TODO: Delete comment if not used
     #fields = ["title", "description", "image"]
     success_url = reverse_lazy("flux_view")
     success_message = (
@@ -216,7 +218,7 @@ class CreateTicketView(LoginRequiredMixin, JsonableResponseMixin, CreateView):
     def form_valid(self, form):
         """docstring"""
 
-
+        # TODO: Find a way using form.save instead of Model.objects.create
         file = HandleUploadedFile(
             file=self.request.FILES["image"],
             filename=self.request.FILES["image"].name,
@@ -552,6 +554,7 @@ class DeletePost(LoginRequiredMixin, SuccessMessageMixin, DeleteView):
 
     def delete(self, request, *args, **kwargs):
         """docstring"""
+        # TODO: I would just do return super()... after message.success
         data_to_return = super().delete(request, *args, **kwargs)
         messages.success(self.request, self.success_message)
         return data_to_return
@@ -571,12 +574,13 @@ class DeleteTicket(LoginRequiredMixin, SuccessMessageMixin, DeleteView):
 
     def delete(self, request, *args, **kwargs):
         """docstring"""
+        # TODO: I would just do return super()... after message.success
         data_to_return = super().delete(request, *args, **kwargs)
         messages.success(self.request, self.success_message)
         return data_to_return
 
 
-
+# TODO: Use ListView on UserFollows here + BaseCreate Mixin
 class DisplaySuscribeView(LoginRequiredMixin, TemplateView):
     """docstring"""
 
@@ -655,6 +659,7 @@ class UnfollowUser(LoginRequiredMixin, SuccessMessageMixin, DeleteView):
 
     def delete(self, request, *args, **kwargs):
         """docstring"""
+        # TODO: I would just do return super()... after message.success
         data_to_return = super().delete(request, *args, **kwargs)
         messages.success(self.request, self.success_message)
         return data_to_return
