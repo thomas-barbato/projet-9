@@ -659,7 +659,7 @@ class UnfollowUser(LoginRequiredMixin, SuccessMessageMixin, DeleteView):
         messages.success(self.request, self.success_message)
         return data_to_return
 
-
+# TODO: User LogoutView instead of custom view
 class UserLogout(RedirectView):
     """docstring"""
 
