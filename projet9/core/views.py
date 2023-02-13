@@ -27,7 +27,7 @@ from .forms import (
     FollowUserForm,
 )
 from .models import Ticket, Review, UserFollows
-from .classes.files import HandleUploadedFile
+from .helper.files import HandleUploadedFile
 
 
 class JsonableResponseMixin:
@@ -38,18 +38,16 @@ class JsonableResponseMixin:
 
     def form_invalid(self, form):
         """docstring"""
-        response = super().form_invalid(form)
         if self.request.is_ajax():
             return JsonResponse(form.errors, status=400)
-        return response
+        return super().form_invalid(form)
 
     def form_valid(self, form):
         """docstring"""
-        response = super().form_valid(form)
         if self.request.is_ajax():
             data = {"message": "Successfully submitted form data."}
             return JsonResponse(data)
-        return response
+        return super().form_valid(form)
 
 
 class CreateUserView(JsonableResponseMixin, FormView):
@@ -66,7 +64,6 @@ class CreateUserView(JsonableResponseMixin, FormView):
 
     def form_valid(self, form):
         """docstring"""
-        response = super(JsonableResponseMixin, self).form_valid(form)
         if self.request.is_ajax():
             if form.cleaned_data["password"] == form.cleaned_data["password2"]:
                 User.objects.create_user(
@@ -79,7 +76,7 @@ class CreateUserView(JsonableResponseMixin, FormView):
                 response = {"status": 1}
                 messages.add_message(self.request, messages.SUCCESS, self.success_message)
                 return JsonResponse(response, status=200)
-        return response
+        return super(JsonableResponseMixin, self).form_valid(form)
 
     def form_invalid(self, form):
         """docstring"""
@@ -186,8 +183,7 @@ class CreateTicketView(LoginRequiredMixin, JsonableResponseMixin, CreateView):
     login_url = settings.LOGIN_URL
     template_name = "dashboard/create_ticket.html"
     model = Ticket
-    form_class = CreateTicketForm
-    #fields = ["title", "description", "image"]
+    fields = ["title", "description", "image"]
     success_url = reverse_lazy("flux_view")
     success_message = (
         '<div class="alert alert-success text-center col-xl-12 col-md-12 col-sm-10 mt-1" role="alert">'
@@ -203,21 +199,19 @@ class CreateTicketView(LoginRequiredMixin, JsonableResponseMixin, CreateView):
 
     def form_valid(self, form):
         """docstring"""
-
+        form.instance.user_id = self.request.user.id
 
         file = HandleUploadedFile(
             file=self.request.FILES["image"],
             filename=self.request.FILES["image"].name,
         )
         file.upload()
-        Ticket.objects.create(
-            title=self.request.POST.get("title"),
-            description=self.request.POST.get("description"),
-            user_id=self.request.user.id,
-            image=file.get_filename(),
-        )
-        form.cleaned_data["image"] = file.get_filename()
-        form.cleaned_data["user_id"] = file.get_filename()
+
+        form.instance.title = self.request.POST.get("title")
+        form.instance.description = self.request.POST.get("description")
+        form.instance.image = file.get_filename()
+        form.save()
+
         messages.add_message(
             self.request,
             messages.SUCCESS,
@@ -235,7 +229,7 @@ class CreateTicketView(LoginRequiredMixin, JsonableResponseMixin, CreateView):
         return super().form_invalid(form)
 
 
-class CreateFullReviewView(LoginRequiredMixin, CreateView):
+class CreateFullReviewView(LoginRequiredMixin, SuccessMessageMixin, CreateView):
     """docstring"""
 
     login_url = settings.LOGIN_URL
@@ -423,6 +417,8 @@ class DislayPostsView(LoginRequiredMixin, TemplateView):
             .order_by("-time_created")
         )
 
+        review = [dict(item, is_review=True) for item in query_review]
+
         query_ticket = list(
             Ticket.objects.select_related("user")
             .filter(user_id=self.request.user.id)
@@ -441,13 +437,13 @@ class DislayPostsView(LoginRequiredMixin, TemplateView):
         ticket = [dict(item, is_ticket=True) for item in query_ticket]
 
         result = []
-        ticket.extend(query_review)
+        ticket.extend(review)
         for item in ticket:
             if item not in result:
                 result.append(item)
 
         result = sorted(result, key=lambda d: d["time_created"], reverse=True)
-        if len(query_review) == 0:
+        if len(result) == 0:
             messages.add_message(
                 self.request,
                 messages.INFO,
@@ -526,7 +522,6 @@ class UpdateTicket(LoginRequiredMixin, SuccessMessageMixin, UpdateView):
         return HttpResponseRedirect(reverse("posts_view"))
 
 
-
 class DeletePost(LoginRequiredMixin, SuccessMessageMixin, DeleteView):
     """docstring"""
 
@@ -538,12 +533,11 @@ class DeletePost(LoginRequiredMixin, SuccessMessageMixin, DeleteView):
         "</div>"
     )
 
+
     def delete(self, request, *args, **kwargs):
         """docstring"""
-        data_to_return = super().delete(request, *args, **kwargs)
         messages.success(self.request, self.success_message)
-        return data_to_return
-
+        return super().delete(request, *args, **kwargs)
 
 
 class DeleteTicket(LoginRequiredMixin, SuccessMessageMixin, DeleteView):
@@ -559,10 +553,8 @@ class DeleteTicket(LoginRequiredMixin, SuccessMessageMixin, DeleteView):
 
     def delete(self, request, *args, **kwargs):
         """docstring"""
-        data_to_return = super().delete(request, *args, **kwargs)
         messages.success(self.request, self.success_message)
-        return data_to_return
-
+        return super().delete(request, *args, **kwargs)
 
 
 class DisplaySuscribeView(LoginRequiredMixin, TemplateView):
@@ -643,21 +635,5 @@ class UnfollowUser(LoginRequiredMixin, SuccessMessageMixin, DeleteView):
 
     def delete(self, request, *args, **kwargs):
         """docstring"""
-        data_to_return = super().delete(request, *args, **kwargs)
         messages.success(self.request, self.success_message)
-        return data_to_return
-
-
-class UserLogout(RedirectView):
-    """docstring"""
-
-    login_url = settings.LOGIN_URL
-    template_name: str = "authentication/login.html"
-
-    def get(self, request, *args, **kwargs):
-        logout(request)
-        return render(
-            request,
-            self.template_name,
-            {"signin_form": SigninForm, "error_display": "false"},
-        )
+        return super().delete(request, *args, **kwargs)

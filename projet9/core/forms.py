@@ -7,6 +7,8 @@ from .validators.check_data import (
     CheckUsernameAlreadyUsed,
     CheckImageExtension,
 )
+from .models import Ticket, Review, UserFollows
+from .helper.files import HandleUploadedFile
 
 
 class SigninForm(AuthenticationForm):
@@ -88,10 +90,6 @@ class CreateTicketForm(forms.Form):
         validators=[CheckImageExtension().validate],
         required=True,
     )
-
-    def save(self, *args, **kwargs):
-        print("SAVE PRINT")
-        return super().save(*args, **kwargs)
 
 
 class CreateReviewForm(forms.Form):
