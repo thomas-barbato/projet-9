@@ -11,7 +11,11 @@ class HandleUploadedFile:
 
     def _check_extension(self):
         allowed_extensions = [".jpg", ".png"]
-        return True if Path(self.filename.lower()).suffixes[0] in allowed_extensions else False
+        return (
+            True
+            if Path(self.filename.lower()).suffixes[0] in allowed_extensions
+            else False
+        )
 
     def _get_uuid_filename(self):
         return f"{str(uuid.uuid4())}{Path(self.filename.lower()).suffix}"

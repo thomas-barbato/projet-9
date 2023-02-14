@@ -26,7 +26,9 @@ class UserFollows(models.Model):
     """docstring"""
 
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="following")
-    followed_user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="followed_by")
+    followed_user = models.ForeignKey(
+        User, on_delete=models.CASCADE, related_name="followed_by"
+    )
 
     class Meta:
         """docstring"""
@@ -39,7 +41,9 @@ class Review(models.Model):
 
     # need to search for a solution about null=True in FK...
     ticket = models.ForeignKey(Ticket, on_delete=models.CASCADE)
-    rating = models.PositiveSmallIntegerField(default=0, validators=[MinValueValidator(0), MaxValueValidator(5)])
+    rating = models.PositiveSmallIntegerField(
+        default=0, validators=[MinValueValidator(0), MaxValueValidator(5)]
+    )
     user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
     headline = models.CharField(max_length=128)
     body = models.TextField(max_length=8192, blank=True)

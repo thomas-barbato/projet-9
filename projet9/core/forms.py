@@ -2,13 +2,9 @@
 from django import forms
 from django.contrib.auth.forms import AuthenticationForm
 from django.forms.widgets import PasswordInput, TextInput
-from .validators.check_data import (
-    CheckPasswordPolicy,
-    CheckUsernameAlreadyUsed,
-    CheckImageExtension,
-)
-from .models import Ticket, Review, UserFollows
-from .helper.files import HandleUploadedFile
+
+from .validators.check_data import (CheckImageExtension, CheckPasswordPolicy,
+                                    CheckUsernameAlreadyUsed)
 
 
 class SigninForm(AuthenticationForm):
@@ -80,13 +76,13 @@ class CreateTicketForm(forms.Form):
     """docstring"""
 
     title = forms.CharField(
-        widget=TextInput(attrs={}),
+        widget=TextInput(),
         required=True,
         label="",
     )
-    description = forms.CharField(widget=TextInput(attrs={}), required=True)
+    description = forms.CharField(widget=TextInput(), required=True)
     image = forms.ImageField(
-        widget=forms.FileInput(attrs={}),
+        widget=forms.FileInput(),
         validators=[CheckImageExtension().validate],
         required=True,
     )
@@ -96,17 +92,17 @@ class CreateReviewForm(forms.Form):
     """docstring"""
 
     headline = forms.CharField(
-        widget=TextInput(attrs={}),
+        widget=TextInput(),
         required=True,
         label="",
     )
     rating = forms.IntegerField(
-        widget=TextInput(attrs={}),
+        widget=TextInput(),
         required=True,
         label="",
     )
     body = forms.CharField(
-        widget=TextInput(attrs={}),
+        widget=TextInput(),
         required=True,
         label="",
     )
@@ -116,7 +112,7 @@ class FollowUserForm(forms.Form):
     """docstring"""
 
     username = forms.CharField(
-        widget=TextInput(attrs={}),
+        widget=TextInput(),
         required=True,
         label="",
     )

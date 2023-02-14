@@ -35,7 +35,9 @@ class Migration(migrations.Migration):
                 ),
                 (
                     "time_created",
-                    models.DateTimeField(auto_now_add=True, verbose_name="Created Time"),
+                    models.DateTimeField(
+                        auto_now_add=True, verbose_name="Created Time"
+                    ),
                 ),
                 (
                     "user",
@@ -72,7 +74,9 @@ class Migration(migrations.Migration):
                 ("body", models.TextField(blank=True, max_length=8192)),
                 (
                     "time_created",
-                    models.DateTimeField(auto_now_add=True, verbose_name="Created Time"),
+                    models.DateTimeField(
+                        auto_now_add=True, verbose_name="Created Time"
+                    ),
                 ),
                 (
                     "ticket",

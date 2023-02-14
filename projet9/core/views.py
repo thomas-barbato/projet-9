@@ -1,32 +1,22 @@
 """ imports """
 import datetime
+
 from django.conf import settings
 from django.contrib import messages
+from django.contrib.auth import authenticate, login
+from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.models import User
 from django.contrib.auth.views import LoginView
-from django.urls import reverse, reverse_lazy
-from django.utils.decorators import method_decorator
-from django.views.decorators.csrf import csrf_protect
-from django.contrib.auth.mixins import LoginRequiredMixin
-from django.http import HttpResponseRedirect, JsonResponse
-from django.contrib.auth import authenticate, login, logout
 from django.contrib.messages.views import SuccessMessageMixin
-from django.views.generic import (
-    UpdateView,
-    DeleteView,
-    TemplateView,
-    CreateView,
-    FormView,
-)
-from .forms import (
-    SigninForm,
-    SignupForm,
-    CreateTicketForm,
-    CreateReviewForm,
-    FollowUserForm,
-)
-from .models import Ticket, Review, UserFollows
+from django.http import HttpResponseRedirect, JsonResponse
+from django.urls import reverse, reverse_lazy
+from django.views.generic import (CreateView, DeleteView, FormView,
+                                  TemplateView, UpdateView)
+
+from .forms import (CreateReviewForm, CreateTicketForm, FollowUserForm,
+                    SigninForm, SignupForm)
 from .helper.files import HandleUploadedFile
+from .models import Review, Ticket, UserFollows
 
 
 class JsonableResponseMixin:
@@ -87,7 +77,9 @@ class CreateUserView(JsonableResponseMixin, FormView):
                     date_joined=datetime.datetime.now(),
                 ).save()
                 response = {"status": 1}
-                messages.add_message(self.request, messages.SUCCESS, self.success_message)
+                messages.add_message(
+                    self.request, messages.SUCCESS, self.success_message
+                )
                 return JsonResponse(response, status=200)
         return super(JsonableResponseMixin, self).form_valid(form)
 
@@ -112,6 +104,7 @@ class LoginAjaxView(LoginView):
     :return: "authentication/login.html"
     :rtype: Template
     """
+
     redirect_authenticated_user = True
 
     def get_success_url(self):
@@ -183,6 +176,7 @@ class FluxView(LoginRequiredMixin, SuccessMessageMixin, TemplateView):
         "dashboard/flux.html"
     :rtype: Template
     """
+
     login_url = settings.LOGIN_URL
     template_name = "dashboard/posts.html"
 
@@ -195,7 +189,9 @@ class FluxView(LoginRequiredMixin, SuccessMessageMixin, TemplateView):
         context = super().get_context_data(**kwargs)
         query_review = list(
             # TODO : ANNOTATION
-            Review.objects.select_related("user", "ticket", "ticket__user_id", "user__username")
+            Review.objects.select_related(
+                "user", "ticket", "ticket__user_id", "user__username"
+            )
             .values(
                 "headline",
                 "body",
@@ -482,7 +478,10 @@ class CreateReviewView(LoginRequiredMixin, FormView):
         :rtype: form_valid
         """
         ticket_id = self.kwargs["id"]
-        if isinstance(ticket_id, int) is True and Ticket.objects.filter(id=ticket_id).exists():
+        if (
+            isinstance(ticket_id, int) is True
+            and Ticket.objects.filter(id=ticket_id).exists()
+        ):
             Review.objects.create(
                 rating=int(self.request.POST.get("rating")),
                 headline=self.request.POST.get("headline"),
@@ -546,7 +545,9 @@ class DisplayPostsView(LoginRequiredMixin, TemplateView):
         """
         context = super().get_context_data(**kwargs)
         query_review = list(
-            Review.objects.select_related("user", "ticket", "ticket__user_id", "user__username")
+            Review.objects.select_related(
+                "user", "ticket", "ticket__user_id", "user__username"
+            )
             .filter(user_id=self.request.user.id)
             .values(
                 "id",
@@ -630,9 +631,9 @@ class UpdatePost(LoginRequiredMixin, SuccessMessageMixin, UpdateView):
         """
         context = super().get_context_data(**kwargs)
         context["rating_range"] = range(5)
-        context["body_content"] = Review.objects.filter(id=self.kwargs["pk"], user_id=self.request.user.id).values()[
-            0
-        ]["body"]
+        context["body_content"] = Review.objects.filter(
+            id=self.kwargs["pk"], user_id=self.request.user.id
+        ).values()[0]["body"]
         return context
 
 
@@ -663,9 +664,9 @@ class UpdateTicket(LoginRequiredMixin, SuccessMessageMixin, UpdateView):
         :rtype: list
         """
         context = super().get_context_data(**kwargs)
-        context["description_content"] = Ticket.objects.filter(id=self.kwargs["pk"]).values()[
-            0
-        ]["description"]
+        context["description_content"] = Ticket.objects.filter(
+            id=self.kwargs["pk"]
+        ).values()[0]["description"]
         return context
 
     def form_valid(self, form):
@@ -677,7 +678,10 @@ class UpdateTicket(LoginRequiredMixin, SuccessMessageMixin, UpdateView):
         :rtype: form_valid
         """
         ticket_id = self.kwargs["pk"]
-        if isinstance(ticket_id, int) is True and Ticket.objects.filter(id=ticket_id).exists():
+        if (
+            isinstance(ticket_id, int) is True
+            and Ticket.objects.filter(id=ticket_id).exists()
+        ):
 
             file = HandleUploadedFile(
                 file=self.request.FILES["image"],
@@ -691,11 +695,7 @@ class UpdateTicket(LoginRequiredMixin, SuccessMessageMixin, UpdateView):
             ticket.user_id = self.request.user.id
             ticket.image = file.get_filename()
             ticket.save()
-            messages.add_message(
-                self.request,
-                messages.SUCCESS,
-                self.success_message
-            )
+            messages.add_message(self.request, messages.SUCCESS, self.success_message)
         return HttpResponseRedirect(reverse("posts_view"))
 
 
@@ -813,7 +813,9 @@ class DisplaySuscribeView(LoginRequiredMixin, TemplateView):
         followed_user = User.objects.filter(username=username)
         if followed_user.exists():
             follower_id = followed_user.values("id", "username")[0]["id"]
-            if not UserFollows.objects.filter(user_id=self.request.user.id, followed_user=follower_id).exists():
+            if not UserFollows.objects.filter(
+                user_id=self.request.user.id, followed_user=follower_id
+            ).exists():
                 UserFollows.objects.create(
                     user_id=self.request.user.id,
                     followed_user=User(id=follower_id),
