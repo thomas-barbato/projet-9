@@ -24,6 +24,7 @@ https://www.python.org/downloads/
 
 3. Créer un environnement virutel:
 `python3 -m venv /path/to/new/virtual/environment`
+ Ou `python -m virtualenv venv`
 
 4. Activer l'environnement virtuel:
 1.`cd Venv\Scripts\ ; ./activate.bat ;`
