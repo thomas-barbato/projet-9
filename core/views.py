@@ -172,8 +172,7 @@ class FluxView(LoginRequiredMixin, SuccessMessageMixin, TemplateView):
         Add a success message on successful from submission
     :Ancestor TemplateView:
         Render a template
-    :return:
-        "dashboard/flux.html"
+    :return:"dashboard/flux.html"
     :rtype: Template
     """
 
