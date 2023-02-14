@@ -132,4 +132,4 @@ dmypy.json
 idea/
 .idea
 
-projet9/.idea
+!/projet9/.idea/
