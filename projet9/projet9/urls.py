@@ -66,7 +66,7 @@ urlpatterns = [
     ),
     path(
         "dashboard/posts/",
-        core_views.DislayPostsView.as_view(
+        core_views.DisplayPostsView.as_view(
             template_name="dashboard/posts.html"
         ),
         name="posts_view",

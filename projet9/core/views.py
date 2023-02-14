@@ -1,9 +1,9 @@
 """ imports """
 import datetime
 from django.conf import settings
-from django.shortcuts import render
 from django.contrib import messages
 from django.contrib.auth.models import User
+from django.contrib.auth.views import LoginView
 from django.urls import reverse, reverse_lazy
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_protect
@@ -12,7 +12,6 @@ from django.http import HttpResponseRedirect, JsonResponse
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.messages.views import SuccessMessageMixin
 from django.views.generic import (
-    RedirectView,
     UpdateView,
     DeleteView,
     TemplateView,
@@ -51,7 +50,15 @@ class JsonableResponseMixin:
 
 
 class CreateUserView(JsonableResponseMixin, FormView):
-    """docstring"""
+    """Allow user account creation
+    :Ancestor FormView: View which display form.
+        return validation error and redirect to success url
+    :Ancestor JsonableResponseMixin:
+        Check if request is ajax
+    :return:
+        "authentication/create_user.html"
+    :rtype: template
+    """
 
     template_name: str = "authentication/create_user.html"
     form_class = SignupForm
@@ -63,7 +70,13 @@ class CreateUserView(JsonableResponseMixin, FormView):
     )
 
     def form_valid(self, form):
-        """docstring"""
+        """Override form_valid to create user and add 'is_active', 'date_joined', 'is_staff', and custom success msg
+        :param form: SignupForm, used to create user.
+        :type form: form
+        :return: JsonResponse with response message and status 200 if request is ajax type
+         else return JsonableResponseMixin form_valid
+        :rtype: Ajax
+        """
         if self.request.is_ajax():
             if form.cleaned_data["password"] == form.cleaned_data["password2"]:
                 User.objects.create_user(
@@ -79,55 +92,106 @@ class CreateUserView(JsonableResponseMixin, FormView):
         return super(JsonableResponseMixin, self).form_valid(form)
 
     def form_invalid(self, form):
-        """docstring"""
+        """Override form_invalid to return custom error message
+        :param form: SignupForm, used to create user.
+        :type form: form
+        :return: JsonResponse with response message, error dict and status 200 if request is ajax type
+         else return JsonableResponseMixin form_valid
+        :rtype: Ajax
+        """
         response = super(JsonableResponseMixin, self).form_invalid(form)
         if self.request.is_ajax():
             response = {"status": 0, "errors": dict(form.errors.items())}
         return JsonResponse(response, status=200)
 
 
-class LoginAjaxView(TemplateView):
-    """docstring"""
+class LoginAjaxView(LoginView):
+    """Check user, login and redirect to flux_view
+    :Ancestor: LoginView
+        Display login form and handle login action
+    :return: "authentication/login.html"
+    :rtype: Template
+    """
+    redirect_authenticated_user = True
 
-    template_name: str = "authentication/login.html"
+    def get_success_url(self):
+        """success url set to redirect after login in
+        :Argument: self
+        :type self : /
+        :return: redirection to flux_view
+        :rtype: str
+        """
+        return reverse_lazy("flux_view")
 
     def get_context_data(self, **kwargs):
-        """docstring"""
+        """Override get_context_data to return form
+        :param kwargs: kwargs.
+        :return: context
+        :rtype: list
+        """
         context = super().get_context_data(**kwargs)
         context["signin_form"] = SigninForm
         return context
 
-    @method_decorator(csrf_protect)
-    def post(self, request):
-        """docstring"""
+    def form_valid(self, form):
+        """Override form_valid, called to log user, return ajax
+        :param form: form
+            return validation error and redirect to success url
+        :return:
+            ajax response (status)
+        :rtype: Json
+        """
         user = authenticate(
-            request,
-            username=request.POST.get("username"),
-            password=request.POST.get("password"),
+            self.request,
+            username=self.request.POST.get("username"),
+            password=self.request.POST.get("password"),
         )
         if user is not None:
-            login(request, user)
+            login(self.request, user)
             response = {"status": 1}
             messages.add_message(
-                request,
+                self.request,
                 messages.SUCCESS,
                 '<div class="alert alert-success text-center col-xl-12 col-md-12 col-sm-10 mt-1" role="alert">'
                 "<p>Vous êtes maintenant connecté.</p>"
                 "</div>",
             )
             return JsonResponse(response, status=200)
+
+    def form_invalid(self, form):
+        """Override form_invalid, return error
+        :param form: form
+            return validation error and redirect to success url
+        :Ancestor JsonableResponseMixin:
+        :return:
+            ajax response (status)
+        :rtype: Json
+        """
         response = {"errors": "true"}
         return JsonResponse(response, status=200)
 
 
 class FluxView(LoginRequiredMixin, SuccessMessageMixin, TemplateView):
-    """docstring"""
-
+    """Display flux view template
+    :Ancestors: LoginRequiredMixin
+        Allow to access flux_view if user is authenticated
+    :Ancestor SuccessMessageMixin:
+        Add a success message on successful from submission
+    :Ancestor TemplateView:
+        Render a template
+    :return:
+        "dashboard/flux.html"
+    :rtype: Template
+    """
     login_url = settings.LOGIN_URL
     template_name = "dashboard/posts.html"
 
     def get_context_data(self, **kwargs):
-        """docstring"""
+        """Override get_context_data to return form
+        :param kwargs: kwargs.
+        :return: context
+        :rtype: list
+        """
         context = super().get_context_data(**kwargs)
         query_review = list(
             # TODO : ANNOTATION
@@ -177,8 +241,16 @@ class FluxView(LoginRequiredMixin, SuccessMessageMixin, TemplateView):
         return context
 
 
-class CreateTicketView(LoginRequiredMixin, JsonableResponseMixin, CreateView):
-    """docstring"""
+class CreateTicketView(LoginRequiredMixin, CreateView):
+    """Display create new ticket template
+    :Ancestors: LoginRequiredMixin
+        Allow to create ticket if user is authenticated
+    :Ancestor CreateView:
+        View for creating new object, with a response rendered by template
+    :return:
+        "dashboard/create_ticket.html"
+    :rtype: template
+    """
 
     login_url = settings.LOGIN_URL
     template_name = "dashboard/create_ticket.html"
@@ -198,7 +270,13 @@ class CreateTicketView(LoginRequiredMixin, JsonableResponseMixin, CreateView):
     )
 
     def form_valid(self, form):
-        """docstring"""
+        """Override form_valid, save ticket and return himself
+        :param form: form
+            return validation error and redirect to success url
+        :return:
+            himself
+        :rtype: form_valid
+        """
         form.instance.user_id = self.request.user.id
 
         file = HandleUploadedFile(
@@ -220,7 +298,13 @@ class CreateTicketView(LoginRequiredMixin, JsonableResponseMixin, CreateView):
         return super().form_valid(form)
 
     def form_invalid(self, form):
-        """docstring"""
+        """Override form_invalid, add error message
+        :param form: form
+            return validation error and redirect to success url
+        :return:
+            himself
+        :rtype: form_invalid
+        """
         messages.add_message(
             self.request,
             messages.ERROR,
@@ -230,7 +314,17 @@ class CreateTicketView(LoginRequiredMixin, JsonableResponseMixin, CreateView):
 
 
 class CreateFullReviewView(LoginRequiredMixin, SuccessMessageMixin, CreateView):
-    """docstring"""
+    """Display create new full review (ticket + review)
+    :Ancestors: LoginRequiredMixin
+        Allow to create ticket if user is authenticated
+    :Ancestor CreateView:
+        View for creating new object, with a response rendered by template
+    :Ancestor SuccessMessageMixin
+        Add a success message on successful from submission
+    :return:
+        "dashboard/create_review.html"
+    :rtype: template
+    """
 
     login_url = settings.LOGIN_URL
     template_name = "dashboard/create_review.html"
@@ -250,13 +344,23 @@ class CreateFullReviewView(LoginRequiredMixin, SuccessMessageMixin, CreateView):
     )
 
     def get_context_data(self, **kwargs):
-        """docstring"""
+        """Override get_context_data to return form
+        :param kwargs: kwargs.
+        :return: context
+        :rtype: list
+        """
         context = super().get_context_data(**kwargs)
         context["rating_range"] = range(6)
         return context
 
     def form_valid(self, form):
-        """docstring"""
+        """Override form_valid, save review + ticket and return himself
+        :param form: form
+            return validation error and redirect to success url
+        :return:
+            himself
+        :rtype: form_valid
+        """
         review_form = CreateReviewForm(self.request.POST)
         ticket_form = CreateTicketForm(self.request.POST, self.request.FILES)
         if review_form.is_valid() and ticket_form.is_valid():
@@ -292,7 +396,13 @@ class CreateFullReviewView(LoginRequiredMixin, SuccessMessageMixin, CreateView):
         return HttpResponseRedirect(reverse("flux_view"))
 
     def form_invalid(self, form):
-        """docstring"""
+        """Override form_invalid, display error message
+        :param form: form
+            return validation
+        :return:
+            himself
+        :rtype: form_invalid
+        """
         messages.add_message(
             self.request,
             messages.ERROR,
@@ -302,7 +412,15 @@ class CreateFullReviewView(LoginRequiredMixin, SuccessMessageMixin, CreateView):
 
 
 class CreateReviewView(LoginRequiredMixin, FormView):
-    """docstring"""
+    """Display create new review (review only)
+    :Ancestors: LoginRequiredMixin
+        Allow to create ticket if user is authenticated
+    :Ancestor FormView:
+        A view for displaying a form and rendering a template response
+    :return:
+        "dashboard/create_review.html"
+    :rtype: template
+    """
 
     login_url = settings.LOGIN_URL
     template_name = "dashboard/create_answer_review.html"
@@ -325,6 +443,11 @@ class CreateReviewView(LoginRequiredMixin, FormView):
     )
 
     def get_context_data(self, **kwargs):
+        """Override get_context_data to return form
+        :param kwargs: kwargs.
+        :return: context
+        :rtype: list
+        """
         context = super().get_context_data(**kwargs)
         ticket_id = self.kwargs["id"]
         ticket = list(
@@ -351,7 +474,13 @@ class CreateReviewView(LoginRequiredMixin, FormView):
         return context
 
     def form_valid(self, form):
-        """docstring"""
+        """Override form_valid, create Review and add message
+        :param form: form
+            return validation error and redirect to success url
+        :return:
+            himself
+        :rtype: form_valid
+        """
         ticket_id = self.kwargs["id"]
         if isinstance(ticket_id, int) is True and Ticket.objects.filter(id=ticket_id).exists():
             Review.objects.create(
@@ -375,7 +504,13 @@ class CreateReviewView(LoginRequiredMixin, FormView):
         return HttpResponseRedirect(reverse("flux_view"))
 
     def form_invalid(self, form):
-        """docstring"""
+        """Override form_invalid, display error message
+        :param form: form
+            return validation
+        :return:
+            himself
+        :rtype: form_invalid
+        """
         messages.add_message(
             self.request,
             messages.ERROR,
@@ -384,8 +519,16 @@ class CreateReviewView(LoginRequiredMixin, FormView):
         return HttpResponseRedirect(reverse("create_review_view"))
 
 
-class DislayPostsView(LoginRequiredMixin, TemplateView):
-    """docstring"""
+class DisplayPostsView(LoginRequiredMixin, TemplateView):
+    """Display post view template (ordered by created time)
+    :Ancestors: LoginRequiredMixin
+        Allow to access posts_view if user is authenticated
+    :Ancestor TemplateView:
+        Render a template. Pass keyword argument from URLconf to the context
+    :return:
+        "dashboard/posts.html"
+    :rtype: Template
+    """
 
     login_url = settings.LOGIN_URL
     template_name = "dashboard/posts.html"
@@ -396,7 +539,11 @@ class DislayPostsView(LoginRequiredMixin, TemplateView):
     )
 
     def get_context_data(self, **kwargs):
-        """docstring"""
+        """Override get_context_data to return form
+        :param kwargs: kwargs.
+        :return: context
+        :rtype: list
+        """
         context = super().get_context_data(**kwargs)
         query_review = list(
             Review.objects.select_related("user", "ticket", "ticket__user_id", "user__username")
@@ -456,7 +603,15 @@ class DislayPostsView(LoginRequiredMixin, TemplateView):
 
 
 class UpdatePost(LoginRequiredMixin, SuccessMessageMixin, UpdateView):
-    """docstring"""
+    """Display update_posts.html template and save edited values.
+    :Ancestors: LoginRequiredMixin
+        Allow to access update_posts if user is authenticated
+    :Ancestor UpdateView:
+        View for updating an object, with a response rendered by template
+    :return:
+        "dashboard/update_posts.html"
+    :rtype: Template
+    """
 
     login_url = settings.LOGIN_URL
     model = Review
@@ -468,7 +623,11 @@ class UpdatePost(LoginRequiredMixin, SuccessMessageMixin, UpdateView):
     )
 
     def get_context_data(self, **kwargs):
-        """docstring"""
+        """Override get_context_data to return form
+        :param kwargs: kwargs.
+        :return: context
+        :rtype: list
+        """
         context = super().get_context_data(**kwargs)
         context["rating_range"] = range(5)
         context["body_content"] = Review.objects.filter(id=self.kwargs["pk"], user_id=self.request.user.id).values()[
@@ -478,7 +637,15 @@ class UpdatePost(LoginRequiredMixin, SuccessMessageMixin, UpdateView):
 
 
 class UpdateTicket(LoginRequiredMixin, SuccessMessageMixin, UpdateView):
-    """docstring"""
+    """Display update_ticket.html template and save edited values.
+    :Ancestors: LoginRequiredMixin
+        Allow to access update_posts if user is authenticated
+    :Ancestor UpdateView:
+        View for updating an object, with a response rendered by template
+    :return:
+        "dashboard/update_ticket.html"
+    :rtype: Template
+    """
 
     login_url = settings.LOGIN_URL
     model = Ticket
@@ -490,7 +657,11 @@ class UpdateTicket(LoginRequiredMixin, SuccessMessageMixin, UpdateView):
     )
 
     def get_context_data(self, **kwargs):
-        """docstring"""
+        """Override get_context_data to return form
+        :param kwargs: kwargs.
+        :return: context
+        :rtype: list
+        """
         context = super().get_context_data(**kwargs)
         context["description_content"] = Ticket.objects.filter(id=self.kwargs["pk"]).values()[
             0
@@ -498,7 +669,13 @@ class UpdateTicket(LoginRequiredMixin, SuccessMessageMixin, UpdateView):
         return context
 
     def form_valid(self, form):
-        """docstring"""
+        """Override form_valid, update ticket + and return himself
+        :param form: form
+            return validation error and redirect to success url
+        :return:
+            himself
+        :rtype: form_valid
+        """
         ticket_id = self.kwargs["pk"]
         if isinstance(ticket_id, int) is True and Ticket.objects.filter(id=ticket_id).exists():
 
@@ -523,7 +700,17 @@ class UpdateTicket(LoginRequiredMixin, SuccessMessageMixin, UpdateView):
 
 
 class DeletePost(LoginRequiredMixin, SuccessMessageMixin, DeleteView):
-    """docstring"""
+    """Delete post.
+    :Ancestors: LoginRequiredMixin
+        Allow to access update_posts if user is authenticated
+    :Ancestors: SuccessMessageMixin
+        Add a success message on successful form submission
+    :Ancestor DeleteView:
+        View for deleting an object retrieved with self.get_object() with a response rendered by a template
+    :return:
+        "dashboard/posts_view.html"
+    :rtype: Template
+    """
 
     model = Review
     success_url = reverse_lazy("posts_view")
@@ -533,15 +720,30 @@ class DeletePost(LoginRequiredMixin, SuccessMessageMixin, DeleteView):
         "</div>"
     )
 
-
     def delete(self, request, *args, **kwargs):
-        """docstring"""
+        """Override delete and display success message
+        :param request: request
+            Django uses request and response objects to pass state through the system
+        :return:
+            himself
+        :rtype: form_valid
+        """
         messages.success(self.request, self.success_message)
         return super().delete(request, *args, **kwargs)
 
 
 class DeleteTicket(LoginRequiredMixin, SuccessMessageMixin, DeleteView):
-    """docstring"""
+    """Delete ticket.
+    :Ancestors: LoginRequiredMixin
+        Allow to access update_posts if user is authenticated
+    :Ancestors: SuccessMessageMixin
+        Add a success message on successful form submission
+    :Ancestor DeleteView:
+        View for deleting an object retrieved with self.get_object() with a response rendered by a template
+    :return:
+        "dashboard/posts_view.html"
+    :rtype: Template
+    """
 
     model = Ticket
     success_url = reverse_lazy("posts_view")
@@ -552,13 +754,27 @@ class DeleteTicket(LoginRequiredMixin, SuccessMessageMixin, DeleteView):
     )
 
     def delete(self, request, *args, **kwargs):
-        """docstring"""
+        """Override delete and display success message
+        :param request: request
+            Django uses request and response objects to pass state through the system
+        :return:
+            himself
+        :rtype: form_valid
+        """
         messages.success(self.request, self.success_message)
         return super().delete(request, *args, **kwargs)
 
 
 class DisplaySuscribeView(LoginRequiredMixin, TemplateView):
-    """docstring"""
+    """Delete ticket.
+    :Ancestors: LoginRequiredMixin
+        Allow to access update_posts if user is authenticated
+    :Ancestor TemplateView:
+        Render a template. Pass keyword arguments from the URLconf to the context
+    :return:
+        "dashboard/posts_view.html"
+    :rtype: Template
+    """
 
     login_url = settings.LOGIN_URL
     template_name: str = "dashboard/suscribe.html"
@@ -567,7 +783,11 @@ class DisplaySuscribeView(LoginRequiredMixin, TemplateView):
     form_class = FollowUserForm
 
     def get_context_data(self, **kwargs):
-        """docstring"""
+        """Override get_context_data to return form
+        :param kwargs: kwargs.
+        :return: context
+        :rtype: list
+        """
         context = super().get_context_data(**kwargs)
         user_follow_list = (
             UserFollows.objects.filter(user_id=self.request.user.id)
@@ -584,7 +804,11 @@ class DisplaySuscribeView(LoginRequiredMixin, TemplateView):
         return context
 
     def post(self, *args, **kwargs):  # pylint: disable=unused-argument
-        """docstring"""
+        """Override post to add UserFollows, return template and messages
+        :param kwargs: kwargs.
+        :return: template "dashboard/suscribe.html"
+        :rtype: Template
+        """
         username: str = self.request.POST.get("id_username")
         followed_user = User.objects.filter(username=username)
         if followed_user.exists():
@@ -621,7 +845,17 @@ class DisplaySuscribeView(LoginRequiredMixin, TemplateView):
 
 
 class UnfollowUser(LoginRequiredMixin, SuccessMessageMixin, DeleteView):
-    """docstring"""
+    """Unfollow User ; delete link between 2 users.
+    :Ancestors: LoginRequiredMixin
+        Allow to access update_posts if user is authenticated
+    :Ancestors: SuccessMessageMixin
+        Add a success message on successful form submission
+    :Ancestor DeleteView:
+        View for deleting an object retrieved with self.get_object() with a response rendered by a template
+    :return:
+        "dashboard/suscribe.html"
+    :rtype: Template
+    """
 
     login_url = settings.LOGIN_URL
     template_name: str = "dashboard/suscribe.html"
@@ -634,6 +868,12 @@ class UnfollowUser(LoginRequiredMixin, SuccessMessageMixin, DeleteView):
     )
 
     def delete(self, request, *args, **kwargs):
-        """docstring"""
+        """Override delete and display success message
+        :param request: request
+            Django uses request and response objects to pass state through the system
+        :return:
+            himself
+        :rtype: form_valid
+        """
         messages.success(self.request, self.success_message)
         return super().delete(request, *args, **kwargs)
