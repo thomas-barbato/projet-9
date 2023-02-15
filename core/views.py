@@ -10,11 +10,22 @@ from django.contrib.auth.views import LoginView
 from django.contrib.messages.views import SuccessMessageMixin
 from django.http import HttpResponseRedirect, JsonResponse
 from django.urls import reverse, reverse_lazy
-from django.views.generic import (CreateView, DeleteView, FormView,
-                                  TemplateView, UpdateView)
+from django.views.generic import (
+    CreateView,
+    DeleteView,
+    FormView,
+    TemplateView,
+    UpdateView,
+)
+from django.views.generic.list import ListView
 
-from .forms import (CreateReviewForm, CreateTicketForm, FollowUserForm,
-                    SigninForm, SignupForm)
+from .forms import (
+    CreateReviewForm,
+    CreateTicketForm,
+    FollowUserForm,
+    SigninForm,
+    SignupForm,
+)
 from .helper.files import HandleUploadedFile
 from .models import Review, Ticket, UserFollows
 
@@ -688,7 +699,7 @@ class UpdateTicket(LoginRequiredMixin, SuccessMessageMixin, UpdateView):
             )
             file.upload()
             ticket = Ticket.objects.get(id=ticket_id)
-            HandleUploadedFile(filename=ticket.image).delete()
+            HandleUploadedFile().delete_standalone_img(filename=ticket.image)
             ticket.title = form.cleaned_data.get("title")
             ticket.description = form.cleaned_data.get("description")
             ticket.user_id = self.request.user.id
@@ -727,6 +738,10 @@ class DeletePost(LoginRequiredMixin, SuccessMessageMixin, DeleteView):
             himself
         :rtype: form_valid
         """
+        ticket_image = Review.objects.select_related(
+                "ticket"
+            ).filter(user_id=self.request.user.id).values("ticket__image")[0]['ticket__image']
+        HandleUploadedFile.delete_standalone_img(filename=ticket_image)
         messages.success(self.request, self.success_message)
         return super().delete(request, *args, **kwargs)
 
@@ -760,16 +775,19 @@ class DeleteTicket(LoginRequiredMixin, SuccessMessageMixin, DeleteView):
             himself
         :rtype: form_valid
         """
+        file = Ticket.objects.get(id=self.kwargs["pk"])
+        HandleUploadedFile.delete_standalone_img(filename=file.image)
         messages.success(self.request, self.success_message)
         return super().delete(request, *args, **kwargs)
 
 
-class DisplaySuscribeView(LoginRequiredMixin, TemplateView):
+class DisplaySuscribeView(LoginRequiredMixin, ListView):
     """Delete ticket.
     :Ancestors: LoginRequiredMixin
         Allow to access update_posts if user is authenticated
-    :Ancestor TemplateView:
-        Render a template. Pass keyword arguments from the URLconf to the context
+    :Ancestor ListView:
+        Render some list of objects, set by "self.object" or "self.queryset"
+        `self.queryset` can actually be any iterable of items, not just a queryset.
     :return:
         "dashboard/posts_view.html"
     :rtype: Template

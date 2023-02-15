@@ -33,5 +33,12 @@ class HandleUploadedFile:
         if file_path.is_file():
             os.remove(file_path)
 
+    @staticmethod
+    def delete_standalone_img(filename):
+        file_path = Path(f"{settings.MEDIA_ROOT}{filename}")
+        if file_path.is_file():
+            os.remove(file_path)
+
+
     def get_filename(self):
         return self.filename

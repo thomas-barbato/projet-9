@@ -3,8 +3,11 @@ from django import forms
 from django.contrib.auth.forms import AuthenticationForm
 from django.forms.widgets import PasswordInput, TextInput
 
-from .validators.check_data import (CheckImageExtension, CheckPasswordPolicy,
-                                    CheckUsernameAlreadyUsed)
+from .validators.check_data import (
+    CheckImageExtension,
+    CheckPasswordPolicy,
+    CheckUsernameAlreadyUsed,
+)
 
 
 class SigninForm(AuthenticationForm):
