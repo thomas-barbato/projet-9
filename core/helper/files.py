@@ -39,6 +39,5 @@ class HandleUploadedFile:
         if file_path.is_file():
             os.remove(file_path)
 
-
     def get_filename(self):
         return self.filename

@@ -175,7 +175,7 @@ class LoginAjaxView(LoginView):
         return JsonResponse(response, status=200)
 
 
-class FluxView(LoginRequiredMixin, SuccessMessageMixin, TemplateView):
+class FluxView(LoginRequiredMixin, TemplateView):
     """Display flux view template
     :Ancestors: LoginRequiredMixin
         Allow to access flux_view if user is authenticated
@@ -319,7 +319,7 @@ class CreateTicketView(LoginRequiredMixin, CreateView):
         return super().form_invalid(form)
 
 
-class CreateFullReviewView(LoginRequiredMixin, SuccessMessageMixin, CreateView):
+class CreateFullReviewView(LoginRequiredMixin, CreateView):
     """Display create new full review (ticket + review)
     :Ancestors: LoginRequiredMixin
         Allow to create ticket if user is authenticated
@@ -417,7 +417,7 @@ class CreateFullReviewView(LoginRequiredMixin, SuccessMessageMixin, CreateView):
         return HttpResponseRedirect(reverse("create_review_view"))
 
 
-class CreateReviewView(LoginRequiredMixin, FormView):
+class CreateReviewView(LoginRequiredMixin, CreateView):
     """Display create new review (review only)
     :Ancestors: LoginRequiredMixin
         Allow to create ticket if user is authenticated
@@ -430,7 +430,7 @@ class CreateReviewView(LoginRequiredMixin, FormView):
 
     login_url = settings.LOGIN_URL
     template_name = "dashboard/create_answer_review.html"
-    form_class = CreateReviewForm
+    model = Review
     fields = ["headline", "body", "rating"]
     success_message = (
         '<div class="alert alert-success text-center col-xl-12 col-md-12 col-sm-10 mt-1" role="alert">'
@@ -492,13 +492,13 @@ class CreateReviewView(LoginRequiredMixin, FormView):
             isinstance(ticket_id, int) is True
             and Ticket.objects.filter(id=ticket_id).exists()
         ):
-            Review.objects.create(
-                rating=int(self.request.POST.get("rating")),
-                headline=self.request.POST.get("headline"),
-                body=self.request.POST.get("body"),
-                ticket_id=ticket_id,
-                user_id=self.request.user.id,
-            )
+
+            form.instance.user_id = self.request.user.id
+            form.instance.rating = int(self.request.POST.get("rating"))
+            form.instance.headline = self.request.POST.get("headline")
+            form.instance.body = self.request.POST.get("body")
+            form.instance.ticket_id = ticket_id
+            form.save()
             messages.add_message(
                 self.request,
                 messages.SUCCESS,
@@ -613,7 +613,7 @@ class DisplayPostsView(LoginRequiredMixin, TemplateView):
         return context
 
 
-class UpdatePost(LoginRequiredMixin, SuccessMessageMixin, UpdateView):
+class UpdatePost(LoginRequiredMixin, UpdateView):
     """Display update_posts.html template and save edited values.
     :Ancestors: LoginRequiredMixin
         Allow to access update_posts if user is authenticated
@@ -647,7 +647,7 @@ class UpdatePost(LoginRequiredMixin, SuccessMessageMixin, UpdateView):
         return context
 
 
-class UpdateTicket(LoginRequiredMixin, SuccessMessageMixin, UpdateView):
+class UpdateTicket(LoginRequiredMixin, UpdateView):
     """Display update_ticket.html template and save edited values.
     :Ancestors: LoginRequiredMixin
         Allow to access update_posts if user is authenticated
@@ -709,7 +709,7 @@ class UpdateTicket(LoginRequiredMixin, SuccessMessageMixin, UpdateView):
         return HttpResponseRedirect(reverse("posts_view"))
 
 
-class DeletePost(LoginRequiredMixin, SuccessMessageMixin, DeleteView):
+class DeletePost(LoginRequiredMixin, DeleteView):
     """Delete post.
     :Ancestors: LoginRequiredMixin
         Allow to access update_posts if user is authenticated
@@ -738,15 +738,17 @@ class DeletePost(LoginRequiredMixin, SuccessMessageMixin, DeleteView):
             himself
         :rtype: form_valid
         """
-        ticket_image = Review.objects.select_related(
-                "ticket"
-            ).filter(user_id=self.request.user.id).values("ticket__image")[0]['ticket__image']
+        ticket_image = (
+            Review.objects.select_related("ticket")
+            .filter(user_id=self.request.user.id)
+            .values("ticket__image")[0]["ticket__image"]
+        )
         HandleUploadedFile.delete_standalone_img(filename=ticket_image)
         messages.success(self.request, self.success_message)
         return super().delete(request, *args, **kwargs)
 
 
-class DeleteTicket(LoginRequiredMixin, SuccessMessageMixin, DeleteView):
+class DeleteTicket(LoginRequiredMixin, DeleteView):
     """Delete ticket.
     :Ancestors: LoginRequiredMixin
         Allow to access update_posts if user is authenticated
@@ -863,7 +865,7 @@ class DisplaySuscribeView(LoginRequiredMixin, ListView):
         return HttpResponseRedirect(reverse("suscribe_view"))
 
 
-class UnfollowUser(LoginRequiredMixin, SuccessMessageMixin, DeleteView):
+class UnfollowUser(LoginRequiredMixin, DeleteView):
     """Unfollow User ; delete link between 2 users.
     :Ancestors: LoginRequiredMixin
         Allow to access update_posts if user is authenticated
