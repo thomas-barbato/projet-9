@@ -8,6 +8,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.models import User
 from django.contrib.auth.views import LoginView
 from django.contrib.messages.views import SuccessMessageMixin
+from django.db.models import Value
 from django.http import HttpResponseRedirect, JsonResponse
 from django.urls import reverse, reverse_lazy
 from django.views.generic import (
@@ -197,7 +198,7 @@ class FluxView(LoginRequiredMixin, TemplateView):
         :rtype: list
         """
         context = super().get_context_data(**kwargs)
-        query_review = list(
+        review = list(
             # TODO : ANNOTATION
             Review.objects.select_related(
                 "user", "ticket", "ticket__user_id", "user__username"
@@ -214,12 +215,11 @@ class FluxView(LoginRequiredMixin, TemplateView):
                 "ticket__title",
                 "ticket__user_id__username",
             )
+            .annotate(is_review=Value(True))
             .order_by("-time_created")
         )
 
-        review = [dict(item, is_review=True) for item in query_review]
-
-        query_ticket = list(
+        ticket = list(
             Ticket.objects.select_related("user")
             .values(
                 "id",
@@ -230,10 +230,9 @@ class FluxView(LoginRequiredMixin, TemplateView):
                 "user__username",
                 "time_created",
             )
+            .annotate(is_ticket=Value(True))
             .order_by("-time_created")
         )
-
-        ticket = [dict(item, is_ticket=True) for item in query_ticket]
 
         result = []
         ticket.extend(review)
@@ -261,7 +260,7 @@ class CreateTicketView(LoginRequiredMixin, CreateView):
     login_url = settings.LOGIN_URL
     template_name = "dashboard/create_ticket.html"
     model = Ticket
-    fields = ["title", "description", "image"]
+    form_class = CreateTicketForm
     success_url = reverse_lazy("flux_view")
     success_message = (
         '<div class="alert alert-success text-center col-xl-12 col-md-12 col-sm-10 mt-1" role="alert">'
@@ -283,25 +282,14 @@ class CreateTicketView(LoginRequiredMixin, CreateView):
             himself
         :rtype: form_valid
         """
-        form.instance.user_id = self.request.user.id
-
-        file = HandleUploadedFile(
-            file=self.request.FILES["image"],
-            filename=self.request.FILES["image"].name,
-        )
-        file.upload()
-
-        form.instance.title = self.request.POST.get("title")
-        form.instance.description = self.request.POST.get("description")
-        form.instance.image = file.get_filename()
-        form.save()
+        form.save(user=self.request.user, file=self.request.FILES["image"])
 
         messages.add_message(
             self.request,
             messages.SUCCESS,
             self.success_message,
         )
-        return super().form_valid(form)
+        return HttpResponseRedirect(reverse("flux_view"))
 
     def form_invalid(self, form):
         """Override form_invalid, add error message
@@ -319,7 +307,7 @@ class CreateTicketView(LoginRequiredMixin, CreateView):
         return super().form_invalid(form)
 
 
-class CreateFullReviewView(LoginRequiredMixin, CreateView):
+class CreateFullReviewView(LoginRequiredMixin,  CreateView):
     """Display create new full review (ticket + review)
     :Ancestors: LoginRequiredMixin
         Allow to create ticket if user is authenticated
@@ -335,7 +323,7 @@ class CreateFullReviewView(LoginRequiredMixin, CreateView):
     login_url = settings.LOGIN_URL
     template_name = "dashboard/create_review.html"
     model = Review
-    fields = ["headline", "body", "rating"]
+    form_class = CreateReviewForm
     success_url = reverse_lazy("flux_view")
     success_message = (
         '<div class="alert alert-success text-center col-xl-12 col-md-12 col-sm-10 mt-1" role="alert">'
@@ -367,33 +355,10 @@ class CreateFullReviewView(LoginRequiredMixin, CreateView):
             himself
         :rtype: form_valid
         """
-        review_form = CreateReviewForm(self.request.POST)
         ticket_form = CreateTicketForm(self.request.POST, self.request.FILES)
-        if review_form.is_valid() and ticket_form.is_valid():
-            file = HandleUploadedFile(
-                file=self.request.FILES["image"],
-                filename=self.request.FILES["image"].name,
-            )
-            file.upload()
-            Ticket.objects.create(
-                title=ticket_form.cleaned_data.get("title"),
-                description=ticket_form.cleaned_data.get("description"),
-                user_id=self.request.user.id,
-                image=file.get_filename(),
-            )
-            ticket = Ticket.objects.get(
-                title=ticket_form.cleaned_data.get("title"),
-                description=ticket_form.cleaned_data.get("description"),
-                user_id=self.request.user.id,
-                image=file.get_filename(),
-            )
-            Review.objects.create(
-                rating=int(review_form.cleaned_data.get("rating")),
-                headline=review_form.cleaned_data.get("headline"),
-                body=review_form.cleaned_data.get("body"),
-                ticket_id=ticket.id,
-                user_id=self.request.user.id,
-            )
+        if ticket_form.is_valid():
+            ticket_form.save(user=self.request.user, file=self.request.FILES["image"])
+            form.save(user=self.request.user, ticket_id=ticket_form.instance.id)
             messages.add_message(
                 self.request,
                 messages.SUCCESS,
@@ -431,7 +396,7 @@ class CreateReviewView(LoginRequiredMixin, CreateView):
     login_url = settings.LOGIN_URL
     template_name = "dashboard/create_answer_review.html"
     model = Review
-    fields = ["headline", "body", "rating"]
+    form_class = CreateReviewForm
     success_message = (
         '<div class="alert alert-success text-center col-xl-12 col-md-12 col-sm-10 mt-1" role="alert">'
         "<p>Votre critique à été créée avec succès.</p>"
@@ -493,12 +458,7 @@ class CreateReviewView(LoginRequiredMixin, CreateView):
             and Ticket.objects.filter(id=ticket_id).exists()
         ):
 
-            form.instance.user_id = self.request.user.id
-            form.instance.rating = int(self.request.POST.get("rating"))
-            form.instance.headline = self.request.POST.get("headline")
-            form.instance.body = self.request.POST.get("body")
-            form.instance.ticket_id = ticket_id
-            form.save()
+            form.save(user=self.request.user, ticket_id=ticket_id)
             messages.add_message(
                 self.request,
                 messages.SUCCESS,
@@ -572,10 +532,9 @@ class DisplayPostsView(LoginRequiredMixin, TemplateView):
                 "ticket__title",
                 "ticket__user_id__username",
             )
+            .annotate(is_review=Value(True))
             .order_by("-time_created")
         )
-
-        review = [dict(item, is_review=True) for item in query_review]
 
         query_ticket = list(
             Ticket.objects.select_related("user")
@@ -589,18 +548,16 @@ class DisplayPostsView(LoginRequiredMixin, TemplateView):
                 "user__username",
                 "time_created",
             )
+            .annotate(is_ticket=Value(True))
             .order_by("-time_created")
         )
 
-        ticket = [dict(item, is_ticket=True) for item in query_ticket]
-
         result = []
-        ticket.extend(review)
-        for item in ticket:
+        query_ticket.extend(query_review)
+        for item in query_ticket:
             if item not in result:
                 result.append(item)
 
-        result = sorted(result, key=lambda d: d["time_created"], reverse=True)
         if len(result) == 0:
             messages.add_message(
                 self.request,

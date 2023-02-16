@@ -27,7 +27,7 @@ https://www.python.org/downloads/
  Ou `python -m virtualenv venv`
 
 4. Activer l'environnement virtuel:
-1.`cd Venv\Scripts\ ; ./activate.bat ;`
+1.`cd Venv\Scripts\ ; .\activate.bat ;`
 2.`cd .. `
 3.`cd .. `
 

@@ -3,6 +3,8 @@ from django import forms
 from django.contrib.auth.forms import AuthenticationForm
 from django.forms.widgets import PasswordInput, TextInput
 
+from .helper.files import HandleUploadedFile
+from .models import Ticket, Review
 from .validators.check_data import (
     CheckImageExtension,
     CheckPasswordPolicy,
@@ -75,40 +77,47 @@ class SignupForm(forms.Form):
     )
 
 
-class CreateTicketForm(forms.Form):
+class CreateTicketForm(forms.ModelForm):
     """docstring"""
+    class Meta:
+        model = Ticket
+        fields = ["title", "description", "image", "user_id"]
+        exclude = ["user_id"]
 
-    title = forms.CharField(
-        widget=TextInput(),
-        required=True,
-        label="",
-    )
-    description = forms.CharField(widget=TextInput(), required=True)
     image = forms.ImageField(
         widget=forms.FileInput(),
         validators=[CheckImageExtension().validate],
         required=True,
     )
 
+    def save(self, *args, **kwargs):
+        file = HandleUploadedFile(
+            file=kwargs["file"],
+            filename=kwargs["file"].name,
+        )
+        file.upload()
+        self.instance.user = kwargs["user"]
+        self.instance.image = file.get_filename()
+        super().save()
 
-class CreateReviewForm(forms.Form):
+
+class CreateReviewForm(forms.ModelForm):
     """docstring"""
+    class Meta:
+        model = Review
+        fields = ["body", "headline", "rating", "user_id"]
+        exclude = ["user_id"]
 
-    headline = forms.CharField(
-        widget=TextInput(),
-        required=True,
-        label="",
-    )
-    rating = forms.IntegerField(
-        widget=TextInput(),
-        required=True,
-        label="",
-    )
-    body = forms.CharField(
-        widget=TextInput(),
-        required=True,
-        label="",
-    )
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['headline'].required = True
+        self.fields['rating'].required = True
+        self.fields['body'].required = True
+
+    def save(self, *args, **kwargs):
+        self.instance.user = kwargs["user"]
+        self.instance.ticket_id = kwargs["ticket_id"]
+        super().save()
 
 
 class FollowUserForm(forms.Form):
