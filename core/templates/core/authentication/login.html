@@ -37,8 +37,8 @@
             </div>
             <form method="POST" action="">
                 {% csrf_token %}
-                {{ signin_form.username }}
-                {{ signin_form.password }}
+                {{ form.username }}
+                {{ form.password }}
                 <div class="alert alert-danger login-policy text-center mt-1" role="alert">
                     <p>identifiant incorrect, veuillez vous assurer d'avoir entré les bonnes informations.</p>
                     <p>Sinon, <a href="{% url 'registration_view' %}">vous pouvez en créer un en cliquant ici</a></p>

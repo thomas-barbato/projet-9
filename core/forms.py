@@ -79,6 +79,7 @@ class SignupForm(forms.Form):
 
 class CreateTicketForm(forms.ModelForm):
     """docstring"""
+
     class Meta:
         model = Ticket
         fields = ["title", "description", "image", "user_id"]
@@ -103,6 +104,7 @@ class CreateTicketForm(forms.ModelForm):
 
 class CreateReviewForm(forms.ModelForm):
     """docstring"""
+
     class Meta:
         model = Review
         fields = ["body", "headline", "rating", "user_id"]
@@ -110,9 +112,9 @@ class CreateReviewForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.fields['headline'].required = True
-        self.fields['rating'].required = True
-        self.fields['body'].required = True
+        self.fields["headline"].required = True
+        self.fields["rating"].required = True
+        self.fields["body"].required = True
 
     def save(self, *args, **kwargs):
         self.instance.user = kwargs["user"]
@@ -122,7 +124,6 @@ class CreateReviewForm(forms.ModelForm):
 
 class FollowUserForm(forms.Form):
     """docstring"""
-
     username = forms.CharField(
         widget=TextInput(),
         required=True,

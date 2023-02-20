@@ -19,7 +19,6 @@ from django.views.generic import (
     UpdateView,
 )
 from django.views.generic.list import ListView
-
 from .forms import (
     CreateReviewForm,
     CreateTicketForm,
@@ -51,7 +50,7 @@ class JsonableResponseMixin:
         return super().form_valid(form)
 
 
-class CreateUserView(JsonableResponseMixin, FormView):
+class CreateUserView(FormView, JsonableResponseMixin, SuccessMessageMixin):
     """Allow user account creation
     :Ancestor FormView: View which display form.
         return validation error and redirect to success url
@@ -71,6 +70,9 @@ class CreateUserView(JsonableResponseMixin, FormView):
         "</div>"
     )
 
+    def get_success_message(self, cleaned_data=""):
+        return self.success_message
+
     def form_valid(self, form):
         """Override form_valid to create user and add 'is_active', 'date_joined', 'is_staff', and custom success msg
         :param form: SignupForm, used to create user.
@@ -89,9 +91,7 @@ class CreateUserView(JsonableResponseMixin, FormView):
                     date_joined=datetime.datetime.now(),
                 ).save()
                 response = {"status": 1}
-                messages.add_message(
-                    self.request, messages.SUCCESS, self.success_message
-                )
+                messages.success(self.request, self.get_success_message())
                 return JsonResponse(response, status=200)
         return super(JsonableResponseMixin, self).form_valid(form)
 
@@ -109,7 +109,7 @@ class CreateUserView(JsonableResponseMixin, FormView):
         return JsonResponse(response, status=200)
 
 
-class LoginAjaxView(LoginView):
+class LoginAjaxView(LoginView, SuccessMessageMixin):
     """Check user, login and redirect to flux_view
     :Ancestor: LoginView
         Display login form and handle login action
@@ -117,7 +117,16 @@ class LoginAjaxView(LoginView):
     :rtype: Template
     """
 
+    form_class = SigninForm
     redirect_authenticated_user = True
+    success_message = (
+        '<div class="alert alert-success text-center col-xl-12 col-md-12 col-sm-10 mt-1" role="alert">'
+        "<p>Vous êtes maintenant connecté.</p>"
+        "</div>"
+    )
+
+    def get_success_message(self, cleaned_data=""):
+        return self.success_message
 
     def get_success_url(self):
         """success url set to redirect after login in
@@ -127,16 +136,6 @@ class LoginAjaxView(LoginView):
         :rtype: str
         """
         return reverse_lazy("flux_view")
-
-    def get_context_data(self, **kwargs):
-        """Override get_context_data to return form
-        :param kwargs: kwargs.
-        :return: context
-        :rtype: list
-        """
-        context = super().get_context_data(**kwargs)
-        context["signin_form"] = SigninForm
-        return context
 
     def form_valid(self, form):
         """Override form_valid, called to log user, return ajax
@@ -151,17 +150,12 @@ class LoginAjaxView(LoginView):
             username=self.request.POST.get("username"),
             password=self.request.POST.get("password"),
         )
+        response = ""
         if user is not None:
             login(self.request, user)
             response = {"status": 1}
-            messages.add_message(
-                self.request,
-                messages.SUCCESS,
-                '<div class="alert alert-success text-center col-xl-12 col-md-12 col-sm-10 mt-1" role="alert">'
-                "<p>Vous êtes maintenant connecté.</p>"
-                "</div>",
-            )
-            return JsonResponse(response, status=200)
+            messages.success(self.request, self.get_success_message())
+        return JsonResponse(response, status=200)
 
     def form_invalid(self, form):
         """Override form_invalid, return error
@@ -199,7 +193,6 @@ class FluxView(LoginRequiredMixin, TemplateView):
         """
         context = super().get_context_data(**kwargs)
         review = list(
-            # TODO : ANNOTATION
             Review.objects.select_related(
                 "user", "ticket", "ticket__user_id", "user__username"
             )
@@ -246,7 +239,7 @@ class FluxView(LoginRequiredMixin, TemplateView):
         return context
 
 
-class CreateTicketView(LoginRequiredMixin, CreateView):
+class CreateTicketView(CreateView, LoginRequiredMixin, SuccessMessageMixin):
     """Display create new ticket template
     :Ancestors: LoginRequiredMixin
         Allow to create ticket if user is authenticated
@@ -274,6 +267,9 @@ class CreateTicketView(LoginRequiredMixin, CreateView):
         "</div>"
     )
 
+    def get_success_message(self, cleaned_data=""):
+        return self.success_message
+
     def form_valid(self, form):
         """Override form_valid, save ticket and return himself
         :param form: form
@@ -283,12 +279,7 @@ class CreateTicketView(LoginRequiredMixin, CreateView):
         :rtype: form_valid
         """
         form.save(user=self.request.user, file=self.request.FILES["image"])
-
-        messages.add_message(
-            self.request,
-            messages.SUCCESS,
-            self.success_message,
-        )
+        messages.success(self.request, self.get_success_message())
         return HttpResponseRedirect(reverse("flux_view"))
 
     def form_invalid(self, form):
@@ -299,15 +290,11 @@ class CreateTicketView(LoginRequiredMixin, CreateView):
             himself
         :rtype: form_invalid
         """
-        messages.add_message(
-            self.request,
-            messages.ERROR,
-            self.error_message,
-        )
+        messages.error(self.request, self.error_message)
         return super().form_invalid(form)
 
 
-class CreateFullReviewView(LoginRequiredMixin,  CreateView):
+class CreateFullReviewView(CreateView, LoginRequiredMixin, SuccessMessageMixin):
     """Display create new full review (ticket + review)
     :Ancestors: LoginRequiredMixin
         Allow to create ticket if user is authenticated
@@ -337,6 +324,9 @@ class CreateFullReviewView(LoginRequiredMixin,  CreateView):
         "</div>",
     )
 
+    def get_success_message(self, cleaned_data=""):
+        return self.success_message
+
     def get_context_data(self, **kwargs):
         """Override get_context_data to return form
         :param kwargs: kwargs.
@@ -359,11 +349,7 @@ class CreateFullReviewView(LoginRequiredMixin,  CreateView):
         if ticket_form.is_valid():
             ticket_form.save(user=self.request.user, file=self.request.FILES["image"])
             form.save(user=self.request.user, ticket_id=ticket_form.instance.id)
-            messages.add_message(
-                self.request,
-                messages.SUCCESS,
-                self.success_message,
-            )
+            messages.success(self.request, self.success_message)
         return HttpResponseRedirect(reverse("flux_view"))
 
     def form_invalid(self, form):
@@ -374,15 +360,11 @@ class CreateFullReviewView(LoginRequiredMixin,  CreateView):
             himself
         :rtype: form_invalid
         """
-        messages.add_message(
-            self.request,
-            messages.ERROR,
-            self.error_message,
-        )
+        messages.error(self.request, self.error_message)
         return HttpResponseRedirect(reverse("create_review_view"))
 
 
-class CreateReviewView(LoginRequiredMixin, CreateView):
+class CreateReviewView(CreateView, LoginRequiredMixin, SuccessMessageMixin):
     """Display create new review (review only)
     :Ancestors: LoginRequiredMixin
         Allow to create ticket if user is authenticated
@@ -412,6 +394,9 @@ class CreateReviewView(LoginRequiredMixin, CreateView):
         "<p>le ticket pour lequel vous tentez de faire une review n'existe pas.</p>"
         "</div>"
     )
+
+    def get_success_message(self, cleaned_data=""):
+        return self.success_message
 
     def get_context_data(self, **kwargs):
         """Override get_context_data to return form
@@ -459,17 +444,9 @@ class CreateReviewView(LoginRequiredMixin, CreateView):
         ):
 
             form.save(user=self.request.user, ticket_id=ticket_id)
-            messages.add_message(
-                self.request,
-                messages.SUCCESS,
-                self.success_message,
-            )
+            messages.success(self.request, self.get_success_message())
         else:
-            messages.add_message(
-                self.request,
-                messages.ERROR,
-                self.error_message2,
-            )
+            messages.error(self.request, self.error_message2)
         return HttpResponseRedirect(reverse("flux_view"))
 
     def form_invalid(self, form):
@@ -480,15 +457,11 @@ class CreateReviewView(LoginRequiredMixin, CreateView):
             himself
         :rtype: form_invalid
         """
-        messages.add_message(
-            self.request,
-            messages.ERROR,
-            self.error_message,
-        )
+        messages.error(self.request, self.error_message)
         return HttpResponseRedirect(reverse("create_review_view"))
 
 
-class DisplayPostsView(LoginRequiredMixin, TemplateView):
+class DisplayPostsView(TemplateView, LoginRequiredMixin):
     """Display post view template (ordered by created time)
     :Ancestors: LoginRequiredMixin
         Allow to access posts_view if user is authenticated
@@ -552,20 +525,12 @@ class DisplayPostsView(LoginRequiredMixin, TemplateView):
             .order_by("-time_created")
         )
 
-        result = []
         query_ticket.extend(query_review)
-        for item in query_ticket:
-            if item not in result:
-                result.append(item)
 
-        if len(result) == 0:
-            messages.add_message(
-                self.request,
-                messages.INFO,
-                self.empty_content_message,
-            )
+        if len(query_ticket) == 0:
+            messages.warning(self.request, self.empty_content_message)
         else:
-            context["posts"] = result
+            context["posts"] = query_ticket
             context["rating_range"] = range(5)
         return context
 
@@ -604,7 +569,7 @@ class UpdatePost(LoginRequiredMixin, UpdateView):
         return context
 
 
-class UpdateTicket(LoginRequiredMixin, UpdateView):
+class UpdateTicket(UpdateView, LoginRequiredMixin, SuccessMessageMixin):
     """Display update_ticket.html template and save edited values.
     :Ancestors: LoginRequiredMixin
         Allow to access update_posts if user is authenticated
@@ -636,6 +601,9 @@ class UpdateTicket(LoginRequiredMixin, UpdateView):
         ).values()[0]["description"]
         return context
 
+    def get_success_message(self, cleaned_data=""):
+        return self.success_message
+
     def form_valid(self, form):
         """Override form_valid, update ticket + and return himself
         :param form: form
@@ -662,11 +630,11 @@ class UpdateTicket(LoginRequiredMixin, UpdateView):
             ticket.user_id = self.request.user.id
             ticket.image = file.get_filename()
             ticket.save()
-            messages.add_message(self.request, messages.SUCCESS, self.success_message)
+            messages.success(self.request, self.get_success_message())
         return HttpResponseRedirect(reverse("posts_view"))
 
 
-class DeletePost(LoginRequiredMixin, DeleteView):
+class DeletePost(DeleteView, LoginRequiredMixin, SuccessMessageMixin):
     """Delete post.
     :Ancestors: LoginRequiredMixin
         Allow to access update_posts if user is authenticated
@@ -687,6 +655,9 @@ class DeletePost(LoginRequiredMixin, DeleteView):
         "</div>"
     )
 
+    def get_success_message(self, cleaned_data=""):
+        return self.success_message
+
     def delete(self, request, *args, **kwargs):
         """Override delete and display success message
         :param request: request
@@ -701,7 +672,7 @@ class DeletePost(LoginRequiredMixin, DeleteView):
             .values("ticket__image")[0]["ticket__image"]
         )
         HandleUploadedFile.delete_standalone_img(filename=ticket_image)
-        messages.success(self.request, self.success_message)
+        messages.success(self.request, self.get_success_message())
         return super().delete(request, *args, **kwargs)
 
 
@@ -740,7 +711,7 @@ class DeleteTicket(LoginRequiredMixin, DeleteView):
         return super().delete(request, *args, **kwargs)
 
 
-class DisplaySuscribeView(LoginRequiredMixin, ListView):
+class DisplaySuscribeView(ListView, LoginRequiredMixin, SuccessMessageMixin):
     """Delete ticket.
     :Ancestors: LoginRequiredMixin
         Allow to access update_posts if user is authenticated
@@ -757,6 +728,43 @@ class DisplaySuscribeView(LoginRequiredMixin, ListView):
     success_url = reverse_lazy("suscribe_view")
     model = UserFollows
     form_class = FollowUserForm
+    error_message = (
+        '<div class="alert alert-info text-center col-xl-12 col-md-12 col-sm-10 mt-1" role="alert">'
+        "<p>l'utilisateur que vous recherchez n'existe pas.</p>"
+        "</div>"
+    )
+    warning_message = (
+        '<div class="alert alert-info text-center col-xl-12 col-md-12 col-sm-10 mt-1" role="alert">'
+        "<p>Vous suivez déjà cet utilisateur.</p>"
+        "</div>"
+    )
+
+    def get_success_message(self, cleaned_data):
+        return (
+            '<div class="alert alert-success text-center col-xl-12 col-md-12 col-sm-10 mt-1" role="alert">'
+            f"<p>Vous suivez maintenant <b>{cleaned_data}</b>.</p>"
+            "</div>"
+        )
+
+    def get_warning_message(self):
+        """Display warning message.
+        :Ancestors: None
+        :return:
+            warning msg
+        :rtype: Template
+            str
+        """
+        return self.warning_message
+
+    def get_error_message(self):
+        """Display error message.
+        :Ancestors: None
+        :return:
+            error msg
+        :rtype: Template
+            str
+        """
+        return self.error_message
 
     def get_context_data(self, **kwargs):
         """Override get_context_data to return form
@@ -796,33 +804,16 @@ class DisplaySuscribeView(LoginRequiredMixin, ListView):
                     user_id=self.request.user.id,
                     followed_user=User(id=follower_id),
                 )
-                messages.add_message(
-                    self.request,
-                    messages.SUCCESS,
-                    '<div class="alert alert-success text-center col-xl-12 col-md-12 col-sm-10 mt-1" role="alert">'
-                    f"<p>Vous suivez maintenant <b>{username}</b>.</p>"
-                    "</div>",
-                )
+                messages.success(self.request, self.get_success_message(username))
             else:
-                messages.add_message(
-                    self.request,
-                    messages.INFO,
-                    '<div class="alert alert-info text-center col-xl-12 col-md-12 col-sm-10 mt-1" role="alert">'
-                    "<p>Vous suivez déjà cet utilisateur.</p>"
-                    "</div>",
-                )
+                messages.warning(self.request, self.get_warning_message())
         else:
-            messages.add_message(
-                self.request,
-                messages.ERROR,
-                '<div class="alert alert-info text-center col-xl-12 col-md-12 col-sm-10 mt-1" role="alert">'
-                "<p>l'utilisateur que vous recherchez n'existe pas.</p>"
-                "</div>",
-            )
+            messages.error(self.request, self.get_error_message())
+
         return HttpResponseRedirect(reverse("suscribe_view"))
 
 
-class UnfollowUser(LoginRequiredMixin, DeleteView):
+class UnfollowUser(DeleteView, LoginRequiredMixin, SuccessMessageMixin):
     """Unfollow User ; delete link between 2 users.
     :Ancestors: LoginRequiredMixin
         Allow to access update_posts if user is authenticated
@@ -845,6 +836,9 @@ class UnfollowUser(LoginRequiredMixin, DeleteView):
         "</div>"
     )
 
+    def get_success_message(self, cleaned_data=""):
+        return self.success_message
+
     def delete(self, request, *args, **kwargs):
         """Override delete and display success message
         :param request: request
@@ -853,5 +847,5 @@ class UnfollowUser(LoginRequiredMixin, DeleteView):
             himself
         :rtype: form_valid
         """
-        messages.success(self.request, self.success_message)
+        messages.success(self.request, self.get_success_message())
         return super().delete(request, *args, **kwargs)
