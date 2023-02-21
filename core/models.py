@@ -1,8 +1,9 @@
 """import"""
 import os
-from django.db import models
-from django.core.validators import MinValueValidator, MaxValueValidator
+
 from django.contrib.auth.models import User
+from django.core.validators import MaxValueValidator, MinValueValidator
+from django.db import models
 from django.urls import reverse
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "projet9.settings")

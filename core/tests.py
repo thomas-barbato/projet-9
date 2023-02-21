@@ -1,8 +1,9 @@
 """import"""
-from django.test import TestCase
-from .models import Ticket, Review, UserFollows
 from django.contrib.auth.models import User
 from django.db.utils import IntegrityError
+from django.test import TestCase
+
+from .models import Review, Ticket, UserFollows
 
 
 class ReviewTest(TestCase):

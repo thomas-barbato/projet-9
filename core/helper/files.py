@@ -1,7 +1,8 @@
-from pathlib import Path
-from django.conf import settings
-import uuid
 import os
+import uuid
+from pathlib import Path
+
+from django.conf import settings
 
 
 class HandleUploadedFile:

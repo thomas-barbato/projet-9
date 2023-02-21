@@ -4,7 +4,7 @@ from django.contrib.auth.forms import AuthenticationForm
 from django.forms.widgets import PasswordInput, TextInput
 
 from .helper.files import HandleUploadedFile
-from .models import Ticket, Review
+from .models import Review, Ticket
 from .validators.check_data import (
     CheckImageExtension,
     CheckPasswordPolicy,
@@ -124,6 +124,7 @@ class CreateReviewForm(forms.ModelForm):
 
 class FollowUserForm(forms.Form):
     """docstring"""
+
     username = forms.CharField(
         widget=TextInput(),
         required=True,

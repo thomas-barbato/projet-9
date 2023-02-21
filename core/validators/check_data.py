@@ -1,10 +1,12 @@
 """import """
-from pathlib import Path
 import re
+from pathlib import Path
+
+from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
 from django.utils.safestring import mark_safe
 from django.utils.translation import gettext as _
-from django.contrib.auth.models import User
+
 from ..models import Ticket
 
 
