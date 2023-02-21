@@ -19,6 +19,7 @@ from django.views.generic import (
     UpdateView,
 )
 from django.views.generic.list import ListView
+from itertools import chain
 from .forms import (
     CreateReviewForm,
     CreateTicketForm,
@@ -192,11 +193,9 @@ class FluxView(LoginRequiredMixin, TemplateView):
         :rtype: list
         """
         context = super().get_context_data(**kwargs)
-        review = list(
-            Review.objects.select_related(
+        review = Review.objects.select_related(
                 "user", "ticket", "ticket__user_id", "user__username"
-            )
-            .values(
+            ).values(
                 "headline",
                 "body",
                 "rating",
@@ -207,14 +206,10 @@ class FluxView(LoginRequiredMixin, TemplateView):
                 "ticket__image",
                 "ticket__title",
                 "ticket__user_id__username",
-            )
-            .annotate(is_review=Value(True))
-            .order_by("-time_created")
-        )
+            ).annotate(is_review=Value(True)).order_by("-time_created")
 
-        ticket = list(
-            Ticket.objects.select_related("user")
-            .values(
+
+        ticket = Ticket.objects.select_related("user").values(
                 "id",
                 "title",
                 "description",
@@ -222,16 +217,9 @@ class FluxView(LoginRequiredMixin, TemplateView):
                 "user_id",
                 "user__username",
                 "time_created",
-            )
-            .annotate(is_ticket=Value(True))
-            .order_by("-time_created")
-        )
+            ).annotate(is_ticket=Value(True)).order_by("-time_created")
 
-        result = []
-        ticket.extend(review)
-        for item in ticket:
-            if item not in result:
-                result.append(item)
+        result = list(chain(review, ticket))
 
         result = sorted(result, key=lambda d: d["time_created"], reverse=True)
         context["posts"] = result
@@ -487,12 +475,9 @@ class DisplayPostsView(TemplateView, LoginRequiredMixin):
         :rtype: list
         """
         context = super().get_context_data(**kwargs)
-        query_review = list(
-            Review.objects.select_related(
+        query_review = Review.objects.select_related(
                 "user", "ticket", "ticket__user_id", "user__username"
-            )
-            .filter(user_id=self.request.user.id)
-            .values(
+            ).filter(user_id=self.request.user.id).values(
                 "id",
                 "headline",
                 "body",
@@ -504,15 +489,9 @@ class DisplayPostsView(TemplateView, LoginRequiredMixin):
                 "ticket__image",
                 "ticket__title",
                 "ticket__user_id__username",
-            )
-            .annotate(is_review=Value(True))
-            .order_by("-time_created")
-        )
+            ).annotate(is_review=Value(True)).order_by("-time_created")
 
-        query_ticket = list(
-            Ticket.objects.select_related("user")
-            .filter(user_id=self.request.user.id)
-            .values(
+        query_ticket = Ticket.objects.select_related("user").filter(user_id=self.request.user.id).values(
                 "id",
                 "title",
                 "description",
@@ -520,17 +499,14 @@ class DisplayPostsView(TemplateView, LoginRequiredMixin):
                 "user_id",
                 "user__username",
                 "time_created",
-            )
-            .annotate(is_ticket=Value(True))
-            .order_by("-time_created")
-        )
+            ).annotate(is_ticket=Value(True)).order_by("-time_created")
 
-        query_ticket.extend(query_review)
+        queries = list(chain(query_ticket, query_review))
 
-        if len(query_ticket) == 0:
+        if len(queries) == 0:
             messages.warning(self.request, self.empty_content_message)
         else:
-            context["posts"] = query_ticket
+            context["posts"] = queries
             context["rating_range"] = range(5)
         return context
 
