@@ -121,6 +121,7 @@ class LoginAjaxView(LoginView, SuccessMessageMixin):
 
     form_class = SigninForm
     redirect_authenticated_user = True
+    success_url = "dashboard/flux"
     success_message = (
         '<div class="alert alert-success text-center col-xl-12 col-md-12 col-sm-10 mt-1" role="alert">'
         "<p>Vous êtes maintenant connecté.</p>"
@@ -211,7 +212,6 @@ class FluxView(LoginRequiredMixin, TemplateView):
                 "ticket__user_id__username",
             )
             .annotate(is_review=Value(True))
-            .order_by("-time_created")
         )
 
         ticket = (
@@ -226,12 +226,9 @@ class FluxView(LoginRequiredMixin, TemplateView):
                 "time_created",
             )
             .annotate(is_ticket=Value(True))
-            .order_by("-time_created")
         )
 
-        result = list(chain(review, ticket))
-
-        result = sorted(result, key=lambda d: d["time_created"], reverse=True)
+        result = sorted(list(chain(review, ticket)), key=lambda d: d["time_created"], reverse=True)
         context["posts"] = result
         context["rating_range"] = range(5)
         return context
@@ -504,7 +501,6 @@ class DisplayPostsView(TemplateView, LoginRequiredMixin):
                 "ticket__user_id__username",
             )
             .annotate(is_review=Value(True))
-            .order_by("-time_created")
         )
 
         query_ticket = (
@@ -520,10 +516,9 @@ class DisplayPostsView(TemplateView, LoginRequiredMixin):
                 "time_created",
             )
             .annotate(is_ticket=Value(True))
-            .order_by("-time_created")
         )
 
-        queries = list(chain(query_ticket, query_review))
+        queries = sorted(list(chain(query_ticket, query_review)), key=lambda d: d["time_created"], reverse=True)
 
         if len(queries) == 0:
             messages.warning(self.request, self.empty_content_message)
