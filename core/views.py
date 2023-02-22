@@ -228,13 +228,15 @@ class FluxView(LoginRequiredMixin, TemplateView):
             .annotate(is_ticket=Value(True))
         )
 
-        result = sorted(list(chain(review, ticket)), key=lambda d: d["time_created"], reverse=True)
+        result = sorted(
+            list(chain(review, ticket)), key=lambda d: d["time_created"], reverse=True
+        )
         context["posts"] = result
         context["rating_range"] = range(5)
         return context
 
 
-class CreateTicketView(CreateView, LoginRequiredMixin, SuccessMessageMixin):
+class CreateTicketView(FormView, LoginRequiredMixin, SuccessMessageMixin):
     """Display create new ticket template
     :Ancestors: LoginRequiredMixin
         Allow to create ticket if user is authenticated
@@ -275,7 +277,7 @@ class CreateTicketView(CreateView, LoginRequiredMixin, SuccessMessageMixin):
         """
         form.save(user=self.request.user, file=self.request.FILES["image"])
         messages.success(self.request, self.get_success_message())
-        return HttpResponseRedirect(reverse("flux_view"))
+        return HttpResponseRedirect(self.get_success_url())
 
     def form_invalid(self, form):
         """Override form_invalid, add error message
@@ -483,10 +485,7 @@ class DisplayPostsView(TemplateView, LoginRequiredMixin):
         """
         context = super().get_context_data(**kwargs)
         query_review = (
-            Review.objects.select_related(
-                "user", "ticket", "ticket__user_id", "user__username"
-            )
-            .filter(user_id=self.request.user.id)
+            Review.objects.select_related("user", "ticket")
             .values(
                 "id",
                 "headline",
@@ -498,33 +497,29 @@ class DisplayPostsView(TemplateView, LoginRequiredMixin):
                 "user__username",
                 "ticket__image",
                 "ticket__title",
-                "ticket__user_id__username",
             )
+            .filter(user_id=self.request.user.id)
             .annotate(is_review=Value(True))
         )
 
         query_ticket = (
-            Ticket.objects.select_related("user")
+            Ticket.objects.all()
             .filter(user_id=self.request.user.id)
-            .values(
-                "id",
-                "title",
-                "description",
-                "image",
-                "user_id",
-                "user__username",
-                "time_created",
-            )
+            .select_related("user")
             .annotate(is_ticket=Value(True))
         )
-
-        queries = sorted(list(chain(query_ticket, query_review)), key=lambda d: d["time_created"], reverse=True)
+        queries = sorted(
+            list(chain(query_ticket.values(), query_review)),
+            key=lambda d: d["time_created"],
+            reverse=True,
+        )
 
         if len(queries) == 0:
             messages.warning(self.request, self.empty_content_message)
         else:
             context["posts"] = queries
             context["rating_range"] = range(5)
+
         return context
 
 
@@ -806,7 +801,7 @@ class DisplaySuscribeView(ListView, LoginRequiredMixin, SuccessMessageMixin):
         return HttpResponseRedirect(reverse("suscribe_view"))
 
 
-class UnfollowUser(DeleteView, LoginRequiredMixin, SuccessMessageMixin):
+class UnfollowUser(SuccessMessageMixin, DeleteView, LoginRequiredMixin):
     """Unfollow User ; delete link between 2 users.
     :Ancestors: LoginRequiredMixin
         Allow to access update_posts if user is authenticated
