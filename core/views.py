@@ -228,9 +228,7 @@ class FluxView(LoginRequiredMixin, TemplateView):
             .annotate(is_ticket=Value(True))
         )
 
-        result = sorted(
-            list(chain(review, ticket)), key=lambda d: d["time_created"], reverse=True
-        )
+        result = list(chain(review.order_by('-time_created'), ticket.order_by('-time_created')))
         context["posts"] = result
         context["rating_range"] = range(5)
         return context
@@ -508,11 +506,8 @@ class DisplayPostsView(TemplateView, LoginRequiredMixin):
             .select_related("user")
             .annotate(is_ticket=Value(True))
         )
-        queries = sorted(
-            list(chain(query_ticket.values(), query_review)),
-            key=lambda d: d["time_created"],
-            reverse=True,
-        )
+
+        queries = list(chain(query_ticket.values().order_by('-time_created'), query_review.order_by('-time_created')))
 
         if len(queries) == 0:
             messages.warning(self.request, self.empty_content_message)
