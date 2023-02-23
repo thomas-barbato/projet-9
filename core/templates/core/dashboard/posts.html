@@ -13,7 +13,7 @@
         </ul>
         {% endif %}
         {% for post in posts %}
-            {% if not post.is_ticket %}
+            {% if not post.post_type == 'Ticket' %}
             <div class="row col-10 d-flex justify-content-center pb-1 mt-1" style="border:2px solid black;">
                 <div class="row no-gutters col-12 mx-auto mb-1">
                    <small class="d-flex justify-content-start col-xl-8 col-md-8 col-sm-12">

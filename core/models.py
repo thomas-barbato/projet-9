@@ -14,7 +14,7 @@ class Ticket(models.Model):
 
     title = models.CharField(max_length=128)
     description = models.TextField(max_length=2048, blank=True)
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
     image = models.ImageField(null=True, blank=True)
     time_created = models.DateTimeField("Created Time", auto_now_add=True)
 
@@ -26,7 +26,7 @@ class Ticket(models.Model):
 class UserFollows(models.Model):
     """docstring"""
 
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="following")
+    user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name="following")
     followed_user = models.ForeignKey(
         User, on_delete=models.CASCADE, related_name="followed_by"
     )
@@ -41,11 +41,11 @@ class Review(models.Model):
     """docstring"""
 
     # need to search for a solution about null=True in FK...
-    ticket = models.ForeignKey(Ticket, on_delete=models.CASCADE)
+    ticket = models.ForeignKey(Ticket, on_delete=models.SET_NULL, null=True)
     rating = models.PositiveSmallIntegerField(
         default=0, validators=[MinValueValidator(0), MaxValueValidator(5)]
     )
-    user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
+    user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
     headline = models.CharField(max_length=128)
     body = models.TextField(max_length=8192, blank=True)
     time_created = models.DateTimeField("Created Time", auto_now_add=True)
