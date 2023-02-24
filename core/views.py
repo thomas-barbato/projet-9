@@ -211,7 +211,7 @@ class FluxView(LoginRequiredMixin, TemplateView):
                 "ticket__title",
                 "ticket__user_id__username",
             )
-            .annotate(is_review=Value(True))
+            .annotate(post_type=Value("Review"))
         )
 
         ticket = (
@@ -225,7 +225,7 @@ class FluxView(LoginRequiredMixin, TemplateView):
                 "user__username",
                 "time_created",
             )
-            .annotate(is_ticket=Value(True))
+            .annotate(post_type=Value("Ticket"))
         )
 
         result = sorted(
