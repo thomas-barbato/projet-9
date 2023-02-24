@@ -54,13 +54,13 @@
                 </div>
                 <div class="row col-12 d-flex justify-content-center" style="border:1px solid black;">
                     <small class="d-flex justify-content-start col-12">
-                        Ticket - {{ post.ticket__user_id__username }}
+                        Ticket - {{ post.ticket.user.username }}
                     </small>
                     <small class="d-flex justify-content-start col-12">
-                        {{ post.ticket__title }}
+                        {{ post.ticket.title }}
                     </small>
                     <div class="d-flex justify-content-center col-12">
-                        <img src="{% get_media_prefix %}{{ post.ticket__image }}" class="img-size img-thumbnail"/>
+                        <img src="{% get_media_prefix %}{{ post.ticket.image }}" class="img-size img-thumbnail"/>
                     </div>
                 </div>
             </div>
@@ -78,6 +78,9 @@
                         {{ post.time_created|date }}
                     </small>
                 </div>
+                 <div class="d-flex justify-content-center col-12">
+                        <img src="{% get_media_prefix %}{{ post.image }}" class="img-size img-thumbnail"/>
+                    </div>
                 <div class="row no-gutters col-12 d-flex justify-content-start">
                     {% autoescape off %}
                     <p>{{ post.description }}</p>

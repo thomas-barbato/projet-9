@@ -83,6 +83,8 @@ class CreateUserView(FormView, JsonableResponseMixin, SuccessMessageMixin):
          else return JsonableResponseMixin form_valid
         :rtype: Ajax
         """
+
+        # TODO: You can use a form here to validate the data
         if self.request.is_ajax():
             if form.cleaned_data["password"] == form.cleaned_data["password2"]:
                 User.objects.create_user(
@@ -195,42 +197,13 @@ class FluxView(LoginRequiredMixin, TemplateView):
         :rtype: list
         """
         context = super().get_context_data(**kwargs)
-        review = (
-            Review.objects.select_related(
-                "user", "ticket", "ticket__user_id", "user__username"
-            )
-            .values(
-                "headline",
-                "body",
-                "rating",
-                "time_created",
-                "ticket_id",
-                "user_id",
-                "user__username",
-                "ticket__image",
-                "ticket__title",
-                "ticket__user_id__username",
-            )
-            .annotate(post_type=Value("Review"))
-        )
-
-        ticket = (
-            Ticket.objects.select_related("user")
-            .values(
-                "id",
-                "title",
-                "description",
-                "image",
-                "user_id",
-                "user__username",
-                "time_created",
-            )
-            .annotate(post_type=Value("Ticket"))
-        )
+        reviews = Review.objects.annotate(post_type=Value("Review"))
+        ticket = Ticket.objects.annotate(post_type=Value("Ticket"))
 
         result = sorted(
-            list(chain(review, ticket)), key=lambda d: d["time_created"], reverse=True
+            list(chain(reviews, ticket)), key=lambda d: d.time_created, reverse=True
         )
+
         context["posts"] = result
         context["rating_range"] = range(5)
         return context
@@ -403,27 +376,29 @@ class CreateReviewView(CreateView, LoginRequiredMixin, SuccessMessageMixin):
         """
         context = super().get_context_data(**kwargs)
         ticket_id = self.kwargs["id"]
-        ticket = list(
-            Ticket.objects.select_related(
-                "user",
-                "ticket",
-                "ticket__user_id__username",
-                "user__username",
-                "user_id__username",
-            )
-            .filter(id=ticket_id)
-            .values(
-                "id",
-                "title",
-                "description",
-                "image",
-                "time_created",
-                "user_id",
-                "user_id__username",
-            )
-        )
+        # TODO: Remove ticket = list(
+        #     Ticket.objects.select_related(
+        #         "user",
+        #         "ticket",
+        #         "ticket__user_id__username",
+        #         "user__username",
+        #         "user_id__username",
+        #     )
+        #     .filter(id=ticket_id)
+        #     .values(
+        #         "id",
+        #         "title",
+        #         "description",
+        #         "image",
+        #         "time_created",
+        #         "user_id",
+        #         "user_id__username",
+        #     )
+        # )
+        ticket = Ticket.objects.get(id=ticket_id)
         context["rating_range"] = range(6)
         context["ticket"] = ticket
+
         return context
 
     def form_valid(self, form):
@@ -484,6 +459,8 @@ class DisplayPostsView(TemplateView, LoginRequiredMixin):
         :rtype: list
         """
         context = super().get_context_data(**kwargs)
+
+        # TODO: Please change what I changed in fluxview
         query_review = (
             Review.objects.select_related("user", "ticket")
             .values(
@@ -551,6 +528,8 @@ class UpdatePost(LoginRequiredMixin, UpdateView):
         """
         context = super().get_context_data(**kwargs)
         context["rating_range"] = range(5)
+
+        # TODO: Use Review.objects.get and get_queryset for this
         context["body_content"] = Review.objects.filter(
             id=self.kwargs["pk"], user_id=self.request.user.id
         ).values()[0]["body"]
@@ -605,7 +584,7 @@ class UpdateTicket(UpdateView, LoginRequiredMixin, SuccessMessageMixin):
             isinstance(ticket_id, int) is True
             and Ticket.objects.filter(id=ticket_id).exists()
         ):
-
+            # TODO: This should be in a form like what did last time
             file = HandleUploadedFile(
                 file=self.request.FILES["image"],
                 filename=self.request.FILES["image"].name,
@@ -654,6 +633,9 @@ class DeletePost(DeleteView, LoginRequiredMixin, SuccessMessageMixin):
             himself
         :rtype: form_valid
         """
+
+        # TODO: No need for select related here
+        #   No need for values here
         ticket_image = (
             Review.objects.select_related("ticket")
             .filter(user_id=self.request.user.id)
@@ -734,6 +716,8 @@ class DisplaySuscribeView(ListView, LoginRequiredMixin, SuccessMessageMixin):
             "</div>"
         )
 
+    # TODO: If no specific mixin for it no worries
+    #   No need for an extra method for a simple string
     def get_warning_message(self):
         """Display warning message.
         :Ancestors: None
@@ -744,6 +728,8 @@ class DisplaySuscribeView(ListView, LoginRequiredMixin, SuccessMessageMixin):
         """
         return self.warning_message
 
+    # TODO: If no specific mixin for it no worries
+    #   No need for an extra method for a simple string
     def get_error_message(self):
         """Display error message.
         :Ancestors: None
@@ -781,6 +767,9 @@ class DisplaySuscribeView(ListView, LoginRequiredMixin, SuccessMessageMixin):
         :return: template "dashboard/suscribe.html"
         :rtype: Template
         """
+
+        # TODO: Use CreateBaseView here, you have it at the same time thant ListView
+        #   Please use a form for this
         username: str = self.request.POST.get("id_username")
         followed_user = User.objects.filter(username=username)
         if followed_user.exists():
