@@ -1,5 +1,6 @@
 {% extends "generalist_template.html" %}
 {% load static %}
+{% load customtags %}
 {% block content %}
 <div class="container-fluid">
     <div class="row no-gutters mt-2">
@@ -39,7 +40,7 @@
                 <div class="col-xl-6 col-md-6 col-sm-10">
                     <label for="id_image" class="justify-content-start"><h5><b>Image</b></h5></label>
                     <button class="btn btn-secondary fake-input-file">Télécharger fichier</button>
-                    <input type="file" id="id_image" class="hidden-input-file" name="image" accept=".jpg, .png" required />
+                    <input type="file" id="id_image" class="hidden-input-file" name="image" accept=".jpg, .png" />
                 </div>
             </div>
             <div class="row no-gutters mt-3 col-12 d-flex justify-content-center">

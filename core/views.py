@@ -83,7 +83,7 @@ class CreateUserView(FormView, JsonableResponseMixin, SuccessMessageMixin):
          else return JsonableResponseMixin form_valid
         :rtype: Ajax
         """
-        if self.request.is_ajax():
+        if SignupForm.is_valid():
             if form.cleaned_data["password"] == form.cleaned_data["password2"]:
                 User.objects.create_user(
                     username=form.cleaned_data["username"],
@@ -195,44 +195,12 @@ class FluxView(LoginRequiredMixin, TemplateView):
         :rtype: list
         """
         context = super().get_context_data(**kwargs)
-        review = (
-            Review.objects.select_related(
-                "user", "ticket", "ticket__user_id", "user__username"
-            )
-            .values(
-                "headline",
-                "body",
-                "rating",
-                "time_created",
-                "ticket_id",
-                "user_id",
-                "user__username",
-                "ticket__image",
-                "ticket__title",
-                "ticket__user_id__username",
-            )
-            .annotate(post_type=Value("Review"))
+        reviews = Review.objects.annotate(post_type=Value("Review"))
+        tickets = Ticket.objects.annotate(post_type=Value("Ticket"))
+        queries = sorted(
+            list(chain(reviews, tickets)), key=lambda d: d.time_created, reverse=True
         )
-
-        ticket = (
-            Ticket.objects.select_related("user")
-            .values(
-                "id",
-                "title",
-                "description",
-                "image",
-                "user_id",
-                "user__username",
-                "time_created",
-            )
-            .annotate(post_type=Value("Ticket"))
-        )
-
-        result = sorted(
-            list(chain(review, ticket)), key=lambda d: d["time_created"], reverse=True
-        )
-        context["posts"] = result
-        context["rating_range"] = range(5)
+        context["posts"] = queries
         return context
 
 
@@ -312,6 +280,7 @@ class CreateFullReviewView(CreateView, LoginRequiredMixin, SuccessMessageMixin):
     success_message = (
         '<div class="alert alert-success text-center col-xl-12 col-md-12 col-sm-10 mt-1" role="alert">'
         "<p>Votre critique à été créée avec succès.</p>"
+        "<p>L'image que vous avez choisi a été mise en ligne.</p>"
         "</div>"
     )
     error_message = (
@@ -331,7 +300,6 @@ class CreateFullReviewView(CreateView, LoginRequiredMixin, SuccessMessageMixin):
         :rtype: list
         """
         context = super().get_context_data(**kwargs)
-        context["rating_range"] = range(6)
         return context
 
     def form_valid(self, form):
@@ -403,27 +371,7 @@ class CreateReviewView(CreateView, LoginRequiredMixin, SuccessMessageMixin):
         """
         context = super().get_context_data(**kwargs)
         ticket_id = self.kwargs["id"]
-        ticket = list(
-            Ticket.objects.select_related(
-                "user",
-                "ticket",
-                "ticket__user_id__username",
-                "user__username",
-                "user_id__username",
-            )
-            .filter(id=ticket_id)
-            .values(
-                "id",
-                "title",
-                "description",
-                "image",
-                "time_created",
-                "user_id",
-                "user_id__username",
-            )
-        )
-        context["rating_range"] = range(6)
-        context["ticket"] = ticket
+        context["ticket"] = Ticket.objects.get(id=ticket_id)
         return context
 
     def form_valid(self, form):
@@ -484,41 +432,16 @@ class DisplayPostsView(TemplateView, LoginRequiredMixin):
         :rtype: list
         """
         context = super().get_context_data(**kwargs)
-        query_review = (
-            Review.objects.select_related("user", "ticket")
-            .values(
-                "id",
-                "headline",
-                "body",
-                "rating",
-                "time_created",
-                "ticket_id",
-                "user_id",
-                "user__username",
-                "ticket__image",
-                "ticket__title",
-            )
-            .filter(user_id=self.request.user.id)
-            .annotate(post_type=Value("Review"))
-        )
-
-        query_ticket = (
-            Ticket.objects.all()
-            .filter(user_id=self.request.user.id)
-            .select_related("user")
-            .annotate(post_type=Value("Ticket"))
-        )
+        reviews = Review.objects.filter(user_id=self.request.user.id).annotate(post_type=Value("Review"))
+        tickets = Ticket.objects.filter(user_id=self.request.user.id).annotate(post_type=Value("Ticket"))
         queries = sorted(
-            list(chain(query_ticket.values(), query_review)),
-            key=lambda d: d["time_created"],
-            reverse=True,
+            list(chain(reviews, tickets)), key=lambda d: d.time_created, reverse=True
         )
 
         if len(queries) == 0:
             messages.warning(self.request, self.empty_content_message)
         else:
             context["posts"] = queries
-            context["rating_range"] = range(5)
 
         return context
 
@@ -550,7 +473,6 @@ class UpdatePost(LoginRequiredMixin, UpdateView):
         :rtype: list
         """
         context = super().get_context_data(**kwargs)
-        context["rating_range"] = range(5)
         context["body_content"] = Review.objects.filter(
             id=self.kwargs["pk"], user_id=self.request.user.id
         ).values()[0]["body"]
@@ -606,17 +528,18 @@ class UpdateTicket(UpdateView, LoginRequiredMixin, SuccessMessageMixin):
             and Ticket.objects.filter(id=ticket_id).exists()
         ):
 
-            file = HandleUploadedFile(
-                file=self.request.FILES["image"],
-                filename=self.request.FILES["image"].name,
-            )
-            file.upload()
             ticket = Ticket.objects.get(id=ticket_id)
-            HandleUploadedFile().delete_standalone_img(filename=ticket.image)
+            if self.request.FILES:
+                file = HandleUploadedFile(
+                    file=self.request.FILES["image"],
+                    filename=self.request.FILES["image"].name,
+                )
+                file.upload()
+                HandleUploadedFile().delete_standalone_img(filename=ticket.image)
+                ticket.image = file.get_filename()
             ticket.title = form.cleaned_data.get("title")
             ticket.description = form.cleaned_data.get("description")
             ticket.user_id = self.request.user.id
-            ticket.image = file.get_filename()
             ticket.save()
             messages.success(self.request, self.get_success_message())
         return HttpResponseRedirect(reverse("posts_view"))

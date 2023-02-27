@@ -1,5 +1,6 @@
 {% extends "generalist_template.html" %}
 {% load static %}
+{% load customtags %}
 {% block content %}
 <div class="container-fluid">
     <div class="row no-gutters mt-2">
@@ -52,7 +53,7 @@
                 <div class="row no-gutters mt-2 col-12 mx-auto">
                     <label for="id_rating" class="justify-content-start"><h5><b>Note</b></h5></label>
                     <div class="col-xl-12 col-md-12 col-sm-10 d-flex justify-content-center">
-                        {% for i in rating_range %}
+                        {% for i in 6|loop:"1" %}
                         <label class="radio-inline col-2">
                             {% if i == object.rating %}
                             <input type="radio" class="review-rating" id="id_rating" name="rating" value="{{ i }}" checked>
