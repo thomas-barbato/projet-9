@@ -10,7 +10,7 @@ from core import views as core_views
 app_name = "core"
 
 urlpatterns = [
-    path("admin", admin.site.urls, name="admin"),
+    path("admin/", admin.site.urls, name="admin"),
     path(
         "",
         core_views.LoginAjaxView.as_view(template_name="authentication/login.html"),

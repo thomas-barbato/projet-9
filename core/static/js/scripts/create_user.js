@@ -27,9 +27,11 @@
                     let username_elem = $('#username_error')
                     $.each(json.errors, function( index, value ) {
                       if(index === "password" || index === "password2" || index === "__all__"){
+                        $("input[type='password']").css({'border': '1px solid red'});
                         password_elem.html(value);
                         password_elem.show().fadeOut(5000);
                       }else if(index === "username"){
+                        $("input[type='text']").css({'border': '1px solid red'});
                         username_elem.html(value);
                         username_elem.show().fadeOut(5000);
                       }

@@ -83,7 +83,9 @@ class CreateUserView(FormView, JsonableResponseMixin, SuccessMessageMixin):
          else return JsonableResponseMixin form_valid
         :rtype: Ajax
         """
-        if SignupForm.is_valid():
+
+        # TODO: You can use a form here to validate the data
+        if self.request.is_ajax():
             if form.cleaned_data["password"] == form.cleaned_data["password2"]:
                 User.objects.create_user(
                     username=form.cleaned_data["username"],
@@ -105,7 +107,7 @@ class CreateUserView(FormView, JsonableResponseMixin, SuccessMessageMixin):
          else return JsonableResponseMixin form_valid
         :rtype: Ajax
         """
-        response = super(JsonableResponseMixin, self).form_invalid(form)
+        response = super().form_invalid(form)
         if self.request.is_ajax():
             response = {"status": 0, "errors": dict(form.errors.items())}
         return JsonResponse(response, status=200)
@@ -347,6 +349,7 @@ class CreateReviewView(CreateView, LoginRequiredMixin, SuccessMessageMixin):
     success_message = (
         '<div class="alert alert-success text-center col-xl-12 col-md-12 col-sm-10 mt-1" role="alert">'
         "<p>Votre critique à été créée avec succès.</p>"
+        "<p>L'image que vous avez choisi a été mise en ligne</p>"
         "</div>"
     )
     error_message = (
@@ -684,18 +687,8 @@ class DisplaySuscribeView(ListView, LoginRequiredMixin, SuccessMessageMixin):
         :rtype: list
         """
         context = super().get_context_data(**kwargs)
-        user_follow_list = (
-            UserFollows.objects.filter(user_id=self.request.user.id)
-            .select_related("user", "user__id", "user__username")
-            .values("id", "followed_user_id__username")
-        )
-        followed_by_list = (
-            UserFollows.objects.filter(followed_user_id=self.request.user.id)
-            .select_related("user", "user__id", "user__username")
-            .values("user_id__username")
-        )
-        context["suscribe"] = user_follow_list
-        context["followed_by"] = followed_by_list
+        context["suscribe"] = UserFollows.objects.filter(user_id=self.request.user.id)
+        context["followed_by"] = UserFollows.objects.filter(followed_user_id=self.request.user.id)
         return context
 
     def post(self, *args, **kwargs):  # pylint: disable=unused-argument

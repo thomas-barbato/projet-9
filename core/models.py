@@ -18,6 +18,9 @@ class Ticket(models.Model):
     image = models.ImageField(null=True, blank=True)
     time_created = models.DateTimeField("Created Time", auto_now_add=True)
 
+    def __str__(self):
+        return self.title
+
     def get_absolute_url(self):
         """docstring"""
         return reverse("create_ticket_view")
@@ -30,6 +33,9 @@ class UserFollows(models.Model):
     followed_user = models.ForeignKey(
         User, on_delete=models.CASCADE, related_name="followed_by"
     )
+
+    def __str__(self):
+        return self.user
 
     class Meta:
         """docstring"""
@@ -49,6 +55,9 @@ class Review(models.Model):
     headline = models.CharField(max_length=128)
     body = models.TextField(max_length=8192, blank=True)
     time_created = models.DateTimeField("Created Time", auto_now_add=True)
+
+    def __str__(self):
+        return self.headline
 
     def get_absolute_url(self):
         """docstring"""

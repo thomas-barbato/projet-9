@@ -30,7 +30,7 @@
                 {% csrf_token %}
                 <div class="d-flex flex-column col-12 followed-users d-flex justify-content-center ">
                   <div class="row p-2 col-12 border color-swap">
-                      <p class="col-xl-10 col-md-10 col-sm-8 followed-user-username">{{ user_suscribe.followed_user_id__username }}</p>
+                      <p class="col-xl-10 col-md-10 col-sm-8 followed-user-username">{{ user_suscribe.followed_user }}</p>
                       <button type="submit" class="btn col-xl-2 col-md-2 col-sm-4 unfollow-user-button">
                           Supprimer
                       </button>
@@ -43,7 +43,7 @@
             <h4 class="text-center col-12">Abonnés</h4>
             {% for follow in followed_by %}
             <div class="d-flex flex-column col-12 suscribed-users">
-              <div class="row p-2 col-12 border color-swap"><p class="col-12">{{ follow.user_id__username }}</p></div>
+              <div class="row p-2 col-12 border color-swap"><p class="col-12">{{ follow.user.username }}</p></div>
             </div>
             {% endfor %}
         </div>
