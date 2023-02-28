@@ -25,7 +25,7 @@ urlpatterns = [
     ),
     path(
         "dashboard/flux",
-        core_views.FluxView.as_view(template_name="dashboard/flux.html"),
+        core_views.DisplayFluxAndPostView.as_view(template_name="dashboard/flux.html"),
         name="flux_view",
     ),
     path(
@@ -63,7 +63,7 @@ urlpatterns = [
     ),
     path(
         "dashboard/posts/",
-        core_views.DisplayPostsView.as_view(
+        core_views.DisplayFluxAndPostView.as_view(
             template_name="dashboard/posts.html"
         ),
         name="posts_view",

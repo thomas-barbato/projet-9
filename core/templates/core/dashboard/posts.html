@@ -14,6 +14,7 @@
         </ul>
         {% endif %}
         {% for post in posts %}
+        {% if post.user_id == request.user.id %}
             {% if not post.post_type == 'Ticket' %}
             <div class="row col-10 d-flex justify-content-center pb-1 mt-1" style="border:2px solid black;">
                 <div class="row no-gutters col-12 mx-auto mb-1">
@@ -88,9 +89,9 @@
                         {{ post.time_created|date }}
                     </small>
                 </div>
-                <div class="row no-gutters col-12 d-flex justify-content-start">
+                <div class="row no-gutters text-break col-12 d-inline-block justify-content-start">
                     {% autoescape off %}
-                        <p>{{ post.description }}</p>
+                        <p class=" text-truncate ">{{ post.description }}</p>
                     {% endautoescape %}
                 </div>
                 <div class="d-flex justify-content-center col-12 mt-1 mb-1">
@@ -109,6 +110,7 @@
                 </div>
             </div>
             {% endif %}
+        {% endif %}
         {% endfor %}
         <div class="mt-3 blank-space"></div>
     </div>

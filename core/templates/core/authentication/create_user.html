@@ -2,7 +2,7 @@
 {% load static %}
 {% block content %}
 <div class="container-fluid main-container">
-    <div class="row no-gutters d-flex justify-content-center">
+    <div class="row no-gutters col-12 d-flex justify-content-center">
         <h4 class="text-center"><i>Inscrivez-vous</i></h4>
         <div class="col-xl-4 col-md-4 col-sm-12">
             <form method="POST" action="">
@@ -12,13 +12,13 @@
                 {{ form.password }}
                 {{ form.password2 }}
                 <div id="password_error"></div>
-                <div class="col-12 text-center mt-2 d-flex justify-content-end">
-                    <form method="GET" action="{% url 'login_view' %}" class=" text-align-center col-6">
-                        <button type="button" class="btn btn-success return-button" value="back_to_login_view">Retourner</button>
-                    </form>
-                    <div class=" text-align-center col-6">
-                        <button type="button" class="btn btn-success text-align-center signup-button" value="signup">S'inscrire</button>
-                    <div>
+                <div class="row no-gutters col-12 mt-3 d-flex flex-sm-column flex-xl-row flex-md-row justify-content-end">
+                    <div class="text-align-center col-xl-4 col-md-5 col-sm-12 col-12 d-flex justify-content-center">
+                        <button type="button" class="btn btn-secondary return-button col-12 mb-1">Retourner</button>
+                    </div>
+                    <div class="col-xl-4 col-md-5 col-sm-12 col-12 d-flex justify-content-center">
+                        <button type="button" class="btn btn-success signup-button col-12 mb-1 mx-auto">Supprimer</button>
+                    </div>
                 </div>
             </form>
         </div>

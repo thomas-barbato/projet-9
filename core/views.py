@@ -175,7 +175,7 @@ class LoginAjaxView(LoginView, SuccessMessageMixin):
         return JsonResponse(response, status=200)
 
 
-class FluxView(LoginRequiredMixin, TemplateView):
+class DisplayFluxAndPostView(LoginRequiredMixin, TemplateView):
     """Display flux view template
     :Ancestors: LoginRequiredMixin
         Allow to access flux_view if user is authenticated
@@ -281,7 +281,7 @@ class CreateFullReviewView(CreateView, LoginRequiredMixin, SuccessMessageMixin):
     success_url = reverse_lazy("flux_view")
     success_message = (
         '<div class="alert alert-success text-center col-xl-12 col-md-12 col-sm-10 mt-1" role="alert">'
-        "<p>Votre critique à été créée avec succès.</p>"
+        "<p>Votre critique et l'image associée ont étés créées avec succès.</p>"
         "<p>L'image que vous avez choisi a été mise en ligne.</p>"
         "</div>"
     )
@@ -349,7 +349,6 @@ class CreateReviewView(CreateView, LoginRequiredMixin, SuccessMessageMixin):
     success_message = (
         '<div class="alert alert-success text-center col-xl-12 col-md-12 col-sm-10 mt-1" role="alert">'
         "<p>Votre critique à été créée avec succès.</p>"
-        "<p>L'image que vous avez choisi a été mise en ligne</p>"
         "</div>"
     )
     error_message = (
@@ -409,46 +408,6 @@ class CreateReviewView(CreateView, LoginRequiredMixin, SuccessMessageMixin):
         return HttpResponseRedirect(reverse("create_review_view"))
 
 
-class DisplayPostsView(TemplateView, LoginRequiredMixin):
-    """Display post view template (ordered by created time)
-    :Ancestors: LoginRequiredMixin
-        Allow to access posts_view if user is authenticated
-    :Ancestor TemplateView:
-        Render a template. Pass keyword argument from URLconf to the context
-    :return:
-        "dashboard/posts.html"
-    :rtype: Template
-    """
-
-    login_url = settings.LOGIN_URL
-    template_name = "dashboard/posts.html"
-    empty_content_message = (
-        '<div class="alert alert-info text-center col-xl-12 col-md-12 col-sm-10 mt-1" role="alert">'
-        "<p>Vous n'avez encore rien publié</p>"
-        "</div>"
-    )
-
-    def get_context_data(self, **kwargs):
-        """Override get_context_data to return form
-        :param kwargs: kwargs.
-        :return: context
-        :rtype: list
-        """
-        context = super().get_context_data(**kwargs)
-        reviews = Review.objects.filter(user_id=self.request.user.id).annotate(post_type=Value("Review"))
-        tickets = Ticket.objects.filter(user_id=self.request.user.id).annotate(post_type=Value("Ticket"))
-        queries = sorted(
-            list(chain(reviews, tickets)), key=lambda d: d.time_created, reverse=True
-        )
-
-        if len(queries) == 0:
-            messages.warning(self.request, self.empty_content_message)
-        else:
-            context["posts"] = queries
-
-        return context
-
-
 class UpdatePost(LoginRequiredMixin, UpdateView):
     """Display update_posts.html template and save edited values.
     :Ancestors: LoginRequiredMixin
@@ -465,7 +424,7 @@ class UpdatePost(LoginRequiredMixin, UpdateView):
     fields = ["headline", "body", "rating"]
     success_message = (
         '<div class="alert alert-success text-center col-xl-12 col-md-12 col-sm-10 mt-1" role="alert">'
-        "<p>Critique modifiée avec succès.</p>"
+        "<p>Cette critique modifiée avec succès.</p>"
         "</div>"
     )
 
@@ -498,7 +457,7 @@ class UpdateTicket(UpdateView, LoginRequiredMixin, SuccessMessageMixin):
     fields = ["title", "description", "image"]
     success_message = (
         '<div class="alert alert-success text-center col-xl-12 col-md-12 col-sm-10 mt-1" role="alert">'
-        "<p>Ticket modifié avec succès.</p>"
+        "<p>Ce Ticket a été modifié avec succès.</p>"
         "</div>"
     )
 
@@ -607,7 +566,7 @@ class DeleteTicket(LoginRequiredMixin, DeleteView):
     success_url = reverse_lazy("posts_view")
     success_message = (
         '<div class="alert alert-success text-center col-xl-12 col-md-12 col-sm-10 mt-1" role="alert">'
-        "<p>Ticket supprimé avec succès.</p>"
+        "<p>Ce ticket et image associée à ce ticket ont étés supprimés avec succès.</p>"
         "</div>"
     )
 
