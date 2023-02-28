@@ -47,7 +47,7 @@ class Review(models.Model):
     """docstring"""
 
     # need to search for a solution about null=True in FK...
-    ticket = models.ForeignKey(Ticket, on_delete=models.SET_NULL, null=True)
+    ticket = models.ForeignKey(Ticket, on_delete=models.PROTECT, null=True)
     rating = models.PositiveSmallIntegerField(
         default=0, validators=[MinValueValidator(0), MaxValueValidator(5)]
     )

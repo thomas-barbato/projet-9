@@ -27,6 +27,7 @@ from .forms import (
     FollowUserForm,
     SigninForm,
     SignupForm,
+    UpdateTicketForm
 )
 from .helper.files import HandleUploadedFile
 from .models import Review, Ticket, UserFollows
@@ -87,13 +88,7 @@ class CreateUserView(FormView, JsonableResponseMixin, SuccessMessageMixin):
         # TODO: You can use a form here to validate the data
         if self.request.is_ajax():
             if form.cleaned_data["password"] == form.cleaned_data["password2"]:
-                User.objects.create_user(
-                    username=form.cleaned_data["username"],
-                    password=form.cleaned_data["password"],
-                    is_active=True,
-                    is_staff=False,
-                    date_joined=datetime.datetime.now(),
-                ).save()
+                form.save()
                 response = {"status": 1}
                 messages.success(self.request, self.get_success_message())
                 return JsonResponse(response, status=200)
@@ -436,8 +431,7 @@ class UpdatePost(LoginRequiredMixin, UpdateView):
         """
         context = super().get_context_data(**kwargs)
         context["body_content"] = Review.objects.filter(
-            id=self.kwargs["pk"], user_id=self.request.user.id
-        ).values()[0]["body"]
+        ).get(id=self.kwargs["pk"], user_id=self.request.user.id)
         return context
 
 
@@ -454,7 +448,7 @@ class UpdateTicket(UpdateView, LoginRequiredMixin, SuccessMessageMixin):
 
     login_url = settings.LOGIN_URL
     model = Ticket
-    fields = ["title", "description", "image"]
+    form_class = UpdateTicketForm
     success_message = (
         '<div class="alert alert-success text-center col-xl-12 col-md-12 col-sm-10 mt-1" role="alert">'
         "<p>Ce Ticket a été modifié avec succès.</p>"
@@ -489,20 +483,10 @@ class UpdateTicket(UpdateView, LoginRequiredMixin, SuccessMessageMixin):
             isinstance(ticket_id, int) is True
             and Ticket.objects.filter(id=ticket_id).exists()
         ):
-
-            ticket = Ticket.objects.get(id=ticket_id)
             if self.request.FILES:
-                file = HandleUploadedFile(
-                    file=self.request.FILES["image"],
-                    filename=self.request.FILES["image"].name,
-                )
-                file.upload()
-                HandleUploadedFile().delete_standalone_img(filename=ticket.image)
-                ticket.image = file.get_filename()
-            ticket.title = form.cleaned_data.get("title")
-            ticket.description = form.cleaned_data.get("description")
-            ticket.user_id = self.request.user.id
-            ticket.save()
+                form.save(file=self.request.FILES, id=ticket_id, user_id=self.request.user.id)
+            else:
+                form.save()
             messages.success(self.request, self.get_success_message())
         return HttpResponseRedirect(reverse("posts_view"))
 
@@ -539,12 +523,6 @@ class DeletePost(DeleteView, LoginRequiredMixin, SuccessMessageMixin):
             himself
         :rtype: form_valid
         """
-        ticket_image = (
-            Review.objects.select_related("ticket")
-            .filter(user_id=self.request.user.id)
-            .values("ticket__image")[0]["ticket__image"]
-        )
-        HandleUploadedFile.delete_standalone_img(filename=ticket_image)
         messages.success(self.request, self.get_success_message())
         return super().delete(request, *args, **kwargs)
 

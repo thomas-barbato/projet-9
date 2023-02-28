@@ -108,4 +108,6 @@ li {
     background-color: #E4BF7E;
 }
 
-p{ word-wrap: break-word; }
+p{
+    word-wrap: break-word;
+}

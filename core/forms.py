@@ -1,10 +1,13 @@
 """imports"""
+import datetime
+
 from django import forms
 from django.contrib.auth.forms import AuthenticationForm
+from django.contrib.auth.hashers import make_password
 from django.forms.widgets import PasswordInput, TextInput
 
 from .helper.files import HandleUploadedFile
-from .models import Review, Ticket
+from .models import Review, Ticket, User
 from .validators.check_data import (
     CheckImageExtension,
     CheckPasswordPolicy,
@@ -37,8 +40,20 @@ class SigninForm(AuthenticationForm):
     )
 
 
-class SignupForm(forms.Form):
+class SignupForm(forms.ModelForm):
     """docstring"""
+    class Meta:
+        model = User
+        fields = ["username", "password"]
+        exclude = ["user_id"]
+
+    def save(self, *args, **kwargs):
+        self.instance.password = make_password(self.instance.password)
+        self.instance.is_staff = False
+        self.instance.is_active = True
+        self.instance.date_joined = datetime.datetime.now()
+        super().save()
+
 
     username = forms.CharField(
         widget=TextInput(
@@ -75,6 +90,25 @@ class SignupForm(forms.Form):
         validators=[CheckPasswordPolicy().validate],
         help_text=CheckPasswordPolicy().get_help_text(),
     )
+
+
+class UpdateTicketForm(forms.ModelForm):
+    class Meta:
+        model = Ticket
+        fields = ["title", "description", "image", "user_id"]
+        exclude = ["user_id"]
+
+    def save(self, *args, **kwargs):
+        if 'file' in kwargs:
+            file = HandleUploadedFile(
+                file=kwargs["file"]["image"],
+                filename=kwargs["file"]["image"].name,
+            )
+            ticket = Ticket.objects.get(id=kwargs["id"], user_id=kwargs["user_id"])
+            HandleUploadedFile().delete_standalone_img(filename=ticket.image)
+            file.upload()
+            self.instance.image = file.get_filename()
+        super().save()
 
 
 class CreateTicketForm(forms.ModelForm):

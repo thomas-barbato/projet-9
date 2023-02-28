@@ -68,7 +68,7 @@
                 <div class="row no-gutters mt-3 col-12 d-flex mx-auto">
                     <div class="col-xl-12 col-md-12 col-sm-10">
                         <label for="id_body" class="justify-content-start"><h5><b>Description</b></h5></label>
-                        <textarea name="body" class="form-control" id="id_body" spellcheck="false" value="{{ body_content}}" required>
+                        <textarea name="body" class="form-control" id="id_body" spellcheck="false" value="{{ body_content.body }}" required>
                         </textarea>
                     </div>
                 </div>
@@ -97,7 +97,7 @@
         })
 
         "{% autoescape off %}"
-        let data = `{{ body_content|safe }}`;
+        let data = `{{ body_content.body|safe }}`;
         body_editor.setData(data);
         "{% endautoescape %}"
     });
