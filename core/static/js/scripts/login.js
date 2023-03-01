@@ -1,4 +1,3 @@
-
 $('.login-policy').hide()
 
 // " " are used to define django values.

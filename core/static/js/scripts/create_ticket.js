@@ -6,16 +6,18 @@
             customConfig : 'config_custom.js',
             height: '20vh',
         })
-
-        body_editor = CKEDITOR.replace('id_body',
-        {
-            customConfig : 'config_custom.js',
-            height: '20vh',
-        })
     })
-    $('.fake-input-file').on('click', function(){
+
+    $('.fake-input-file').on('click', function(e){
         $('.hidden-input-file').click();
     })
+
+    $(document).on('keypress',function(e) {
+        if(e.which == 13) {
+            $('.create-ticket-button').click()
+            console.log("click click ")
+        }
+    });
 
 
 

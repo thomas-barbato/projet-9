@@ -4,13 +4,15 @@ from itertools import chain
 
 from django.conf import settings
 from django.contrib import messages
+
 from django.contrib.auth import authenticate, login
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.models import User
 from django.contrib.auth.views import LoginView
 from django.contrib.messages.views import SuccessMessageMixin
 from django.db.models import Value
-from django.http import HttpResponseRedirect, JsonResponse
+from django.http import HttpResponseRedirect, JsonResponse, HttpResponse
+from django.shortcuts import render
 from django.urls import reverse, reverse_lazy
 from django.views.generic import (
     CreateView,
@@ -85,7 +87,6 @@ class CreateUserView(FormView, JsonableResponseMixin, SuccessMessageMixin):
         :rtype: Ajax
         """
 
-        # TODO: You can use a form here to validate the data
         if self.request.is_ajax():
             if form.cleaned_data["password"] == form.cleaned_data["password2"]:
                 form.save()
@@ -168,6 +169,7 @@ class LoginAjaxView(LoginView, SuccessMessageMixin):
         """
         response = {"errors": "true"}
         return JsonResponse(response, status=200)
+
 
 
 class DisplayFluxAndPostView(LoginRequiredMixin, TemplateView):

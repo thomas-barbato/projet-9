@@ -13,13 +13,20 @@
             height: '20vh',
         })
     })
-    $('.fake-input-file').on('click', function(){
+
+    $('.fake-input-file').on('click', function(e){
         $('.hidden-input-file').click();
     })
 
+    $(document).on('keypress',function(e) {
+        if(e.which == 13) {
+            $('.create-review-button').click()
+        }
+    });
 
 
-    $('.create-ticket-button').on('submit', function(e){
+    $('.create-review-button').on('submit', function(e){
+        e.preventDefault();
         let formData = new FormData();
         let id_title = $('#id_title').val();
         let id_description = $('#id_description').val()

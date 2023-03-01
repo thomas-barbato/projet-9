@@ -5,13 +5,12 @@
         {
             customConfig : 'config_custom.js',
             height: '20vh',
-        })
+        }
     })
 
      let answer_review_array = document.URL.split('/')
      let answer_review_id = answer_review_array[answer_review_array.length-1];
      let answer_review_url = "/dashboard/flux/create_answer_review/" + answer_review_id + "?"
-
     $('.answer-ticket-button').on('submit', function(e){
         let this_id = "{{ ticket.id }}";
         let url = answer_review_url;
