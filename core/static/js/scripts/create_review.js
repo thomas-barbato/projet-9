@@ -26,7 +26,6 @@
 
 
     $('.create-review-button').on('submit', function(e){
-        e.preventDefault();
         let formData = new FormData();
         let id_title = $('#id_title').val();
         let id_description = $('#id_description').val()
@@ -41,6 +40,7 @@
         formData.append('id_title', JSON.stringify(id_title));
         formData.append('id_description', JSON.stringify(CKEDITOR.instances['id_description'].getData()))
         formData.append('id_headline', JSON.stringify(id_headline));
+        formData.append('id_rating', JSON.stringify(id_rating));
         formData.append('id_body', JSON.stringify(CKEDITOR.instances['id_body'].getData()))
         formData.append('csrfmiddlewaretoken', csrf);
             $.ajax({

@@ -1,18 +1,15 @@
 """ imports """
-import datetime
 from itertools import chain
 
 from django.conf import settings
 from django.contrib import messages
-
 from django.contrib.auth import authenticate, login
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.models import User
 from django.contrib.auth.views import LoginView
 from django.contrib.messages.views import SuccessMessageMixin
 from django.db.models import Value
-from django.http import HttpResponseRedirect, JsonResponse, HttpResponse
-from django.shortcuts import render
+from django.http import HttpResponseRedirect, JsonResponse
 from django.urls import reverse, reverse_lazy
 from django.views.generic import (
     CreateView,
@@ -29,7 +26,7 @@ from .forms import (
     FollowUserForm,
     SigninForm,
     SignupForm,
-    UpdateTicketForm
+    UpdateTicketForm,
 )
 from .helper.files import HandleUploadedFile
 from .models import Review, Ticket, UserFollows
@@ -169,7 +166,6 @@ class LoginAjaxView(LoginView, SuccessMessageMixin):
         """
         response = {"errors": "true"}
         return JsonResponse(response, status=200)
-
 
 
 class DisplayFluxAndPostView(LoginRequiredMixin, TemplateView):
@@ -432,8 +428,9 @@ class UpdatePost(LoginRequiredMixin, UpdateView):
         :rtype: list
         """
         context = super().get_context_data(**kwargs)
-        context["body_content"] = Review.objects.filter(
-        ).get(id=self.kwargs["pk"], user_id=self.request.user.id)
+        context["body_content"] = Review.objects.filter().get(
+            id=self.kwargs["pk"], user_id=self.request.user.id
+        )
         return context
 
 
@@ -486,7 +483,9 @@ class UpdateTicket(UpdateView, LoginRequiredMixin, SuccessMessageMixin):
             and Ticket.objects.filter(id=ticket_id).exists()
         ):
             if self.request.FILES:
-                form.save(file=self.request.FILES, id=ticket_id, user_id=self.request.user.id)
+                form.save(
+                    file=self.request.FILES, id=ticket_id, user_id=self.request.user.id
+                )
             else:
                 form.save()
             messages.success(self.request, self.get_success_message())
@@ -627,7 +626,9 @@ class DisplaySuscribeView(ListView, LoginRequiredMixin, SuccessMessageMixin):
         """
         context = super().get_context_data(**kwargs)
         context["suscribe"] = UserFollows.objects.filter(user_id=self.request.user.id)
-        context["followed_by"] = UserFollows.objects.filter(followed_user_id=self.request.user.id)
+        context["followed_by"] = UserFollows.objects.filter(
+            followed_user_id=self.request.user.id
+        )
         return context
 
     def post(self, *args, **kwargs):  # pylint: disable=unused-argument

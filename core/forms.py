@@ -42,6 +42,7 @@ class SigninForm(AuthenticationForm):
 
 class SignupForm(forms.ModelForm):
     """docstring"""
+
     class Meta:
         model = User
         fields = ["username", "password"]
@@ -53,7 +54,6 @@ class SignupForm(forms.ModelForm):
         self.instance.is_active = True
         self.instance.date_joined = datetime.datetime.now()
         super().save()
-
 
     username = forms.CharField(
         widget=TextInput(
@@ -99,7 +99,7 @@ class UpdateTicketForm(forms.ModelForm):
         exclude = ["user_id"]
 
     def save(self, *args, **kwargs):
-        if 'file' in kwargs:
+        if "file" in kwargs:
             file = HandleUploadedFile(
                 file=kwargs["file"]["image"],
                 filename=kwargs["file"]["image"].name,

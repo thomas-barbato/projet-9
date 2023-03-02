@@ -29,7 +29,9 @@ class Ticket(models.Model):
 class UserFollows(models.Model):
     """docstring"""
 
-    user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name="following")
+    user = models.ForeignKey(
+        User, on_delete=models.SET_NULL, null=True, related_name="following"
+    )
     followed_user = models.ForeignKey(
         User, on_delete=models.CASCADE, related_name="followed_by"
     )
