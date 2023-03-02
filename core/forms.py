@@ -49,6 +49,7 @@ class SignupForm(forms.ModelForm):
         exclude = ["user_id"]
 
     def save(self, *args, **kwargs):
+        self.instance.username = self.instance.username.lower()
         self.instance.password = make_password(self.instance.password)
         self.instance.is_staff = False
         self.instance.is_active = True

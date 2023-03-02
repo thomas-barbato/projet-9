@@ -1,6 +1,6 @@
 
     $(window).on('load', function(){
-
+        $('.file-msg').hide();
         description_editor = CKEDITOR.replace('id_description',
         {
             customConfig : 'config_custom.js',
@@ -18,11 +18,26 @@
         $('.hidden-input-file').click();
     })
 
+
     $(document).on('keypress',function(e) {
         if(e.which == 13) {
             $('.create-review-button').click()
         }
     });
+
+    function readURL(input) {
+        if (input.files && input.files[0]) {
+            var reader = new FileReader();
+            reader.readAsDataURL(input.files[0]);
+        }
+    }
+
+    $("#id_image").change(function(){
+        readURL(this);
+        $('.file-msg').show();
+    });
+
+
 
 
     $('.create-review-button').on('submit', function(e){
@@ -40,7 +55,6 @@
         formData.append('id_title', JSON.stringify(id_title));
         formData.append('id_description', JSON.stringify(CKEDITOR.instances['id_description'].getData()))
         formData.append('id_headline', JSON.stringify(id_headline));
-        formData.append('id_rating', JSON.stringify(id_rating));
         formData.append('id_body', JSON.stringify(CKEDITOR.instances['id_body'].getData()))
         formData.append('csrfmiddlewaretoken', csrf);
             $.ajax({

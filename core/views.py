@@ -143,9 +143,10 @@ class LoginAjaxView(LoginView, SuccessMessageMixin):
             ajax response (status)
         :rtype: Json
         """
+        username = self.request.POST.get("username")
         user = authenticate(
             self.request,
-            username=self.request.POST.get("username"),
+            username=username.lower(),
             password=self.request.POST.get("password"),
         )
         response = ""
@@ -379,8 +380,7 @@ class CreateReviewView(CreateView, LoginRequiredMixin, SuccessMessageMixin):
         """
         ticket_id = self.kwargs["id"]
         if (
-            isinstance(ticket_id, int) is True
-            and Ticket.objects.filter(id=ticket_id).exists()
+            Ticket.objects.filter(id=ticket_id).exists()
         ):
 
             form.save(user=self.request.user, ticket_id=ticket_id)
@@ -478,16 +478,13 @@ class UpdateTicket(UpdateView, LoginRequiredMixin, SuccessMessageMixin):
         :rtype: form_valid
         """
         ticket_id = self.kwargs["pk"]
+        kwarg_dict = {}
         if (
-            isinstance(ticket_id, int) is True
-            and Ticket.objects.filter(id=ticket_id).exists()
+            Ticket.objects.filter(id=ticket_id).exists()
         ):
             if self.request.FILES:
-                form.save(
-                    file=self.request.FILES, id=ticket_id, user_id=self.request.user.id
-                )
-            else:
-                form.save()
+                kwarg_dict = {'file':self.request.FILES, 'id': ticket_id, 'user_id':self.request.user.id}
+            form.save(**kwarg_dict)
             messages.success(self.request, self.get_success_message())
         return HttpResponseRedirect(reverse("posts_view"))
 

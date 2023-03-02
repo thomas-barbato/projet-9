@@ -6,7 +6,33 @@ $('.login-policy').hide()
     $('ul.messages').fadeOut(5000);
 "{% endif %}"
 
-$('.login-button').on('click', function(){
+let isUsernameValid = false;
+let isPasswordValid = false;
+
+
+$('#id_username').on('change', function(){
+    if($(this).val().length > 3){
+        isUsernameValid = true;
+        $('.login-button').prop("disabled",false);
+    }else{
+        isUsernameValid = false;
+        $('.login-button').prop("disabled",true);
+    }
+})
+
+$('#id_password').on('change', function(){
+    if($(this).val().length > 3){
+        isPasswordValid = true;
+        $('.login-button').prop("disabled",false);
+    }else{
+        isPasswordValid = false;
+        $('.login-button').prop("disabled",true);
+    }
+})
+
+
+$('.login-button').on('click', function(e){
+    e.preventDefault();
     let url = login_view
     let username = $('#id_username').val();
     let password = $('#id_password').val();
@@ -30,6 +56,7 @@ $('.login-button').on('click', function(){
             }
         }
     })
+
 })
 
 $('.welcome-msg').fadeOut(5000);
