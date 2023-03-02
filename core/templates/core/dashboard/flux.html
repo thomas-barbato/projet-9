@@ -24,11 +24,11 @@
             <div class="row col-10 d-flex justify-content-center pb-1 mt-1" style="border:2px solid black;">
                 <div class="row no-gutters col-12 mx-auto mb-1">
                    <small class="d-flex justify-content-start col-xl-8 col-md-8 col-sm-12">
-                    {% if post.user_id == request.user.id %}
+                    {% if post.user.id == request.user.id %}
                     Vous avez publi&eacute; une critique
-                       {% else %}
-                       {{ post.ticket.user.username }} a publi&eacute; une critique
-                       {% endif %}
+                   {% else %}
+                   {{ post.ticket.user.username }} a publi&eacute; une critique
+                   {% endif %}
                    </small>
                     <small class="d-flex justify-content-end col-xl-4 col-md-4 col-sm-12">
                         {{ post.time_created|date }}
@@ -55,7 +55,11 @@
                 </div>
                 <div class="row col-12 d-flex justify-content-center ticket-color" style="border:1px solid black;">
                     <small class="d-flex justify-content-start col-12">
+                    {% if post.user.id == request.user.id %}
+                        Ticket - Vous
+                   {% else %}
                         Ticket - {{ post.ticket.user.username }}
+                   {% endif %}
                     </small>
                     <small class="d-flex justify-content-start col-12">
                         {{ post.ticket.title }}
