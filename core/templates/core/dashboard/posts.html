@@ -3,7 +3,7 @@
 {% load customtags %}
 {% block content %}
 <div class="container-fluid d-flex justify-content-center">
-    <div class="row col-xl-6 col-md-8 col-sm-10 d-flex justify-content-center mt-5">
+    <div class="row col-xl-6 col-md-8 col-sm-10 col-10 d-flex justify-content-center mt-5">
         {% if messages %}
         <ul class="messages">
             {% for message in messages %}
@@ -31,7 +31,7 @@
                 </div>
                 <div class="row no-gutters col-12 d-flex justify-content-start">
                     <p class="d-flex justify-content-start order-0 col-xl-12 col-sm-12 align-items-center">
-                        <label for="rating">{{ post.headline}} - </label>
+                        <label for="rating" class="">{{ post.headline}} - </label>
                         <span class="col-xl-6 col-md-6 col-sm-12" id="rating">
                         {% for i in 5|loop:"0" %}
                             {% if i < post.rating %}
@@ -64,12 +64,12 @@
                     </div>
                 </div>
                 <div class="row col-12 d-flex justify-content-end mt-3">
-                    <form method="POST" action="{% url 'update_post_view' pk=post.id %}" class="btn-space col-xl-4 col-md-5 col-sm-10">
+                    <form method="POST" action="{% url 'update_post_view' pk=post.id %}" class="btn-space col-xl-4 col-md-5 col-12 col-sm-12">
                         {% csrf_token %}
                         <input type="hidden" value="{{ post.id }}" name="pk">
                         <button type="submit" class="btn btn-secondary col-12 mb-1">Modifier</button>
                     </form>
-                    <form method="POST" action="{% url 'delete_post' pk=post.id %}" class="btn-space col-xl-4 col-md-5 col-sm-10">
+                    <form method="POST" action="{% url 'delete_post' pk=post.id %}" class="btn-space col-xl-4 col-md-5 col-12 col-sm-12">
                         {% csrf_token %}
                         <button type="submit" class="btn btn-secondary col-12 mb-3">Supprimer</button>
                     </form>
