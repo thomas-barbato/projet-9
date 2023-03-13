@@ -587,6 +587,11 @@ class DisplaySuscribeView(ListView, LoginRequiredMixin, SuccessMessageMixin):
         "<p>Vous suivez déjà cet utilisateur.</p>"
         "</div>"
     )
+    same_user_message = (
+        '<div class="alert alert-info text-center col-xl-12 col-md-12 col-sm-10 mt-1" role="alert">'
+        "<p>Vous ne pouvez pas vous suivre vous même.</p>"
+        "</div>"
+    )
 
     def get_success_message(self, cleaned_data):
         return (
@@ -615,6 +620,16 @@ class DisplaySuscribeView(ListView, LoginRequiredMixin, SuccessMessageMixin):
         """
         return self.error_message
 
+    def get_same_user_message(self):
+        """Display error message.
+        :Ancestors: None
+        :return:
+            error msg
+        :rtype: Template
+            str
+        """
+        return self.same_user_message
+
     def get_context_data(self, **kwargs):
         """Override get_context_data to return form
         :param kwargs: kwargs.
@@ -636,18 +651,22 @@ class DisplaySuscribeView(ListView, LoginRequiredMixin, SuccessMessageMixin):
         """
         username: str = self.request.POST.get("id_username")
         followed_user = User.objects.filter(username=username)
+        print(self.request.user.id)
         if followed_user.exists():
             follower_id = followed_user.values("id", "username")[0]["id"]
-            if not UserFollows.objects.filter(
-                user_id=self.request.user.id, followed_user=follower_id
-            ).exists():
-                UserFollows.objects.create(
-                    user_id=self.request.user.id,
-                    followed_user=User(id=follower_id),
-                )
-                messages.success(self.request, self.get_success_message(username))
+            if follower_id != self.request.user.id:
+                if not UserFollows.objects.filter(
+                    user_id=self.request.user.id, followed_user=follower_id
+                ).exists():
+                    UserFollows.objects.create(
+                        user_id=self.request.user.id,
+                        followed_user=User(id=follower_id),
+                    )
+                    messages.success(self.request, self.get_success_message(username))
+                else:
+                    messages.warning(self.request, self.get_warning_message())
             else:
-                messages.warning(self.request, self.get_warning_message())
+                messages.warning(self.request, self.get_same_user_message())
         else:
             messages.error(self.request, self.get_error_message())
 
