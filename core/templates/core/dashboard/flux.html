@@ -55,7 +55,7 @@
                 </div>
                 <div class="row col-xl-12 col-md-12 col-sm-10 col-10 d-flex justify-content-center ticket-color" style="border:1px solid black;">
                     <small class="d-flex justify-content-start col-12">
-                    {% if post.ticket.user.id == request.user.id %}
+                    {% if post.ticket.user_id == request.user.id %}
                         Ticket - Vous
                    {% else %}
                         Ticket - {{ post.ticket.user.username }}

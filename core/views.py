@@ -8,7 +8,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.models import User
 from django.contrib.auth.views import LoginView
 from django.contrib.messages.views import SuccessMessageMixin
-from django.db.models import Value
+from django.db.models import Value, Q
 from django.http import HttpResponseRedirect, JsonResponse
 from django.urls import reverse, reverse_lazy
 from django.views.generic import (
@@ -169,7 +169,48 @@ class LoginAjaxView(LoginView, SuccessMessageMixin):
         return JsonResponse(response, status=200)
 
 
-class DisplayFluxAndPostView(LoginRequiredMixin, TemplateView):
+class DisplayFluxView(LoginRequiredMixin, TemplateView):
+    """Display flux view template
+    :Ancestors: LoginRequiredMixin
+        Allow to access flux_view if user is authenticated
+    :Ancestor SuccessMessageMixin:
+        Add a success message on successful from submission
+    :Ancestor TemplateView:
+        Render a template
+    :return:"dashboard/flux.html"
+    :rtype: Template
+    """
+
+    login_url = settings.LOGIN_URL
+    template_name = "dashboard/flux.html"
+
+    def get_context_data(self, **kwargs):
+        """Override get_context_data to return form
+        :param kwargs: kwargs.
+        :return: context
+        :rtype: list
+        """
+        context = super().get_context_data(**kwargs)
+        followed_users_id = [
+            pk
+            for pk in UserFollows.objects.filter(
+                user_id=self.request.user.id
+            ).values_list("followed_user_id", flat=True)
+        ]
+        reviews = Review.objects.filter(
+            Q(user_id__in=followed_users_id) | Q(user_id=self.request.user.id)
+        ).annotate(post_type=Value("Review"))
+        tickets = Ticket.objects.filter(
+            Q(user_id__in=followed_users_id) | Q(user_id=self.request.user.id)
+        ).annotate(post_type=Value("Ticket"))
+        queries = sorted(
+            list(chain(reviews, tickets)), key=lambda d: d.time_created, reverse=True
+        )
+        context["posts"] = queries
+        return context
+
+
+class DisplayPostView(LoginRequiredMixin, TemplateView):
     """Display flux view template
     :Ancestors: LoginRequiredMixin
         Allow to access flux_view if user is authenticated
