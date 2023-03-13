@@ -4,3 +4,7 @@ $(window).on('load', function(){
     $('.color-swap:even').addClass('color-swap-2')
     $('.color-swap:even>button.btn').addClass('btn-dark')
 })
+
+'{% if messages %}'
+    $('.messages').fadeOut(5000);
+'{% endif %}'
