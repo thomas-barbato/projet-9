@@ -379,9 +379,7 @@ class CreateReviewView(CreateView, LoginRequiredMixin, SuccessMessageMixin):
         :rtype: form_valid
         """
         ticket_id = self.kwargs["id"]
-        if (
-            Ticket.objects.filter(id=ticket_id).exists()
-        ):
+        if Ticket.objects.filter(id=ticket_id).exists():
 
             form.save(user=self.request.user, ticket_id=ticket_id)
             messages.success(self.request, self.get_success_message())
@@ -479,11 +477,13 @@ class UpdateTicket(UpdateView, LoginRequiredMixin, SuccessMessageMixin):
         """
         ticket_id = self.kwargs["pk"]
         kwarg_dict = {}
-        if (
-            Ticket.objects.filter(id=ticket_id).exists()
-        ):
+        if Ticket.objects.filter(id=ticket_id).exists():
             if self.request.FILES:
-                kwarg_dict = {'file':self.request.FILES, 'id': ticket_id, 'user_id':self.request.user.id}
+                kwarg_dict = {
+                    "file": self.request.FILES,
+                    "id": ticket_id,
+                    "user_id": self.request.user.id,
+                }
             form.save(**kwarg_dict)
             messages.success(self.request, self.get_success_message())
         return HttpResponseRedirect(reverse("posts_view"))
