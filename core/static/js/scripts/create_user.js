@@ -1,6 +1,7 @@
 
     $('#username_error, #password_error').hide()
     $('.return-button').on('click', function(){
+    console.log("ok")
         window.location.href = login_view;
     });
 

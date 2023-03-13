@@ -37,4 +37,3 @@ https://www.python.org/downloads/
 6. lancer le serveur:
 `python manage.py runserver`
 
-
